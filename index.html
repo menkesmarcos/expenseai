@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ExpenseAI">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>ExpenseAI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#f7f7f5;--surface:#ffffff;--surface2:#f0f0ec;
+    --text:#1a1a2e;--text2:#6b6b80;--text3:#a0a0b0;
+    --accent:#6C63FF;--accent2:#3EC6E0;--dark:#1a1a2e;
+    --border:rgba(0,0,0,0.08);--radius:16px;--radius-sm:10px;
+    --shadow:0 4px 24px rgba(0,0,0,0.08);
+  }
+  html,body{height:100%;overflow:hidden;background:var(--dark)}
+  #app{height:100vh;display:flex;flex-direction:column;background:var(--bg);max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+  
+  /* SCREENS */
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform 0.32s cubic-bezier(0.4,0,0.2,1),opacity 0.32s;background:var(--bg)}
+  .screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
+  .screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
+
+  /* STATUS BAR */
+  .status{background:var(--dark);padding:env(safe-area-inset-top,14px) 20px 10px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+  .status-time{color:#fff;font-size:14px;font-weight:500;font-family:'DM Mono',monospace}
+  .status-icons{display:flex;gap:5px;align-items:center}
+  .status-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.6)}
+
+  /* LOGIN */
+  #login-screen{background:var(--dark);justify-content:flex-end;padding-bottom:env(safe-area-inset-bottom,24px)}
+  .login-bg{position:absolute;inset:0;background:linear-gradient(160deg,#0d0d1a 0%,#1a1a2e 50%,#0a1628 100%)}
+  .login-orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.15}
+  .orb1{width:300px;height:300px;background:#6C63FF;top:-50px;right:-80px}
+  .orb2{width:200px;height:200px;background:#3EC6E0;bottom:200px;left:-60px}
+  .login-content{position:relative;z-index:2;padding:40px 28px 32px}
+  .login-logo{font-size:48px;margin-bottom:16px;display:block}
+  .login-title{font-size:34px;font-weight:600;color:#fff;letter-spacing:-1px;line-height:1.1}
+  .login-sub{font-size:15px;color:rgba(255,255,255,0.45);margin-top:8px;margin-bottom:36px}
+  .user-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+  .user-option{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all 0.15s;-webkit-user-select:none}
+  .user-option.selected{background:rgba(108,99,255,0.2);border-color:rgba(108,99,255,0.6)}
+  .user-option:active{transform:scale(0.98)}
+  .u-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+  .u-name{font-size:15px;font-weight:500;color:#fff}
+  .u-card{font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;margin-top:1px}
+  .u-check{margin-left:auto;color:#6C63FF;font-size:20px;opacity:0}
+  .user-option.selected .u-check{opacity:1}
+  .btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:transform 0.1s,opacity 0.2s;letter-spacing:0.2px}
+  .btn-primary:active{transform:scale(0.98)}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed}
+
+  /* NAV BAR */
+  .bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 0 env(safe-area-inset-bottom,12px);flex-shrink:0;position:relative;z-index:10}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer;transition:color 0.15s;color:var(--text3);border:none;background:none;font-family:'DM Sans',sans-serif}
+  .nav-item.active{color:var(--accent)}
+  .nav-icon{font-size:22px;line-height:1}
+  .nav-label{font-size:10px;font-weight:500}
+  .nav-fab{position:absolute;left:50%;transform:translateX(-50%);top:-24px;width:52px;height:52px;border-radius:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(108,99,255,0.4);transition:transform 0.1s}
+  .nav-fab:active{transform:translateX(-50%) scale(0.94)}
+  .nav-fab svg{width:22px;height:22px;fill:#fff}
+
+  /* HOME */
+  .app-header{background:var(--dark);padding:16px 20px 20px;flex-shrink:0}
+  .header-greeting{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:2px}
+  .header-name{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+  .balance-block{background:rgba(255,255,255,0.07);border-radius:var(--radius);padding:18px;margin-top:14px}
+  .bal-label{font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.8px}
+  .bal-row{display:flex;align-items:baseline;justify-content:space-between;margin-top:4px}
+  .bal-spent{font-size:32px;font-weight:300;color:#fff;font-family:'DM Mono',monospace;letter-spacing:-1px}
+  .bal-avail{text-align:right}
+  .bal-avail-label{font-size:11px;color:rgba(255,255,255,0.4)}
+  .bal-avail-val{font-size:16px;font-weight:500;color:var(--accent2);font-family:'DM Mono',monospace}
+  .prog-bg{background:rgba(255,255,255,0.1);border-radius:4px;height:4px;margin-top:14px;overflow:hidden}
+  .prog-fill{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.6s ease}
+  .prog-label{font-size:11px;color:rgba(255,255,255,0.35);margin-top:6px;display:flex;justify-content:space-between}
+
+  /* CARD BRAND */
+  .card-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px 4px 6px;width:fit-content}
+  .chip-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+  .chip-num{font-size:12px;color:rgba(255,255,255,0.7);font-family:'DM Mono',monospace}
+
+  /* SCROLL CONTENT */
+  .scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px}
+  .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px}
+  .see-all{font-size:12px;color:var(--accent);font-weight:500;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+  /* CATEGORY CHIPS */
+  .cats-scroll{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
+  .cats-scroll::-webkit-scrollbar{display:none}
+  .cat-chip{background:var(--surface);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border);flex-shrink:0;min-width:90px}
+  .cat-emoji{font-size:20px;margin-bottom:4px}
+  .cat-name{font-size:11px;color:var(--text2);font-weight:400}
+  .cat-val{font-size:16px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;margin-top:2px}
+
+  /* TICKET LIST */
+  .ticket-card{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:var(--radius);padding:13px 14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:transform 0.1s,box-shadow 0.1s}
+  .ticket-card:active{transform:scale(0.98)}
+  .ticket-thumb{width:46px;height:46px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+  .ticket-thumb img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+  .ticket-info{flex:1;min-width:0}
+  .ticket-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ticket-sub{font-size:11px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:6px}
+  .badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block}
+  .ticket-right{text-align:right;flex-shrink:0}
+  .ticket-amount{font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text)}
+  .ticket-ref{font-size:10px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+
+  /* SCANNER OVERLAY */
+  .overlay{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;background:#000;overflow:hidden}
+  .overlay.hidden{display:none}
+  .overlay-header{padding:env(safe-area-inset-top,16px) 20px 12px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.6)}
+  .overlay-title{color:#fff;font-size:16px;font-weight:500}
+  .overlay-close{background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:17px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .scan-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+  .scan-guide{width:260px;height:340px;border-radius:var(--radius);position:relative}
+  .scan-corner-piece{position:absolute;width:24px;height:24px}
+  .scan-corner-piece.tl{top:0;left:0;border-top:2.5px solid var(--accent2);border-left:2.5px solid var(--accent2);border-radius:4px 0 0 0}
+  .scan-corner-piece.tr{top:0;right:0;border-top:2.5px solid var(--accent2);border-right:2.5px solid var(--accent2);border-radius:0 4px 0 0}
+  .scan-corner-piece.bl{bottom:0;left:0;border-bottom:2.5px solid var(--accent2);border-left:2.5px solid var(--accent2);border-radius:0 0 0 4px}
+  .scan-corner-piece.br{bottom:0;right:0;border-bottom:2.5px solid var(--accent2);border-right:2.5px solid var(--accent2);border-radius:0 0 4px 0}
+  .scan-inner{width:240px;height:320px;border-radius:12px;border:1px solid rgba(108,99,255,0.25);position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .scan-beam{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent 0%,var(--accent) 30%,var(--accent2) 70%,transparent 100%);top:10%;animation:beam 2s ease-in-out infinite}
+  @keyframes beam{0%,100%{top:10%;opacity:0.8}50%{top:90%;opacity:1}}
+  .scan-hint{color:rgba(255,255,255,0.4);font-size:13px;text-align:center;padding:0 20px}
+  .scan-actions{padding:20px;display:flex;flex-direction:column;gap:10px;padding-bottom:env(safe-area-inset-bottom,24px)}
+  .btn-scan{width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px}
+  .btn-outline{width:100%;padding:14px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+  /* PROCESSING OVERLAY */
+  .process-overlay{position:absolute;inset:0;z-index:110;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+  .process-overlay.hidden{display:none}
+  .spinner{width:52px;height:52px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .process-title{color:#fff;font-size:18px;font-weight:500}
+  .process-sub{color:rgba(255,255,255,0.4);font-size:13px}
+  .process-steps{display:flex;flex-direction:column;gap:8px;margin-top:8px;width:240px}
+  .p-step{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.35)}
+  .p-step.done{color:rgba(255,255,255,0.7)}
+  .p-step.active{color:#fff}
+  .p-step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);flex-shrink:0}
+  .p-step.done .p-step-dot{background:#3EC6E0}
+  .p-step.active .p-step-dot{background:var(--accent);box-shadow:0 0 8px rgba(108,99,255,0.8);animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+
+  /* RESULT OVERLAY */
+  .result-overlay{position:absolute;inset:0;z-index:120;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;padding:env(safe-area-inset-top,16px) 0 env(safe-area-inset-bottom,16px)}
+  .result-overlay.hidden{display:none}
+  .result-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+  .result-title{color:#fff;font-size:18px;font-weight:600}
+  .result-scroll{flex:1;overflow-y:auto;padding:0 20px}
+  .ticket-preview{background:rgba(255,255,255,0.05);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+  .ticket-preview-img{width:100%;max-height:200px;object-fit:contain;background:#111}
+  .result-card{background:rgba(255,255,255,0.06);border-radius:var(--radius);overflow:hidden}
+  .result-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .result-row:last-child{border-bottom:none}
+  .r-label{font-size:12px;color:rgba(255,255,255,0.45)}
+  .r-value{font-size:13px;font-weight:500;color:#fff;text-align:right;max-width:60%;word-break:break-word}
+  .r-value.big{font-size:18px;font-family:'DM Mono',monospace;color:#fff}
+  .r-value.deducible{color:#3EC6E0}
+  .result-footer{padding:16px 20px;display:flex;gap:10px}
+  .btn-save{flex:1;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .btn-discard{padding:15px 18px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius);font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+  /* TICKETS SCREEN */
+  .screen-header{background:var(--dark);padding:env(safe-area-inset-top,16px) 20px 16px;flex-shrink:0}
+  .screen-title{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+  .filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-top:12px}
+  .filter-row::-webkit-scrollbar{display:none}
+  .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;flex-shrink:0;transition:all 0.15s}
+  .filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* PROFILE SCREEN */
+  .profile-section{background:var(--surface);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;border:1px solid var(--border)}
+  .profile-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .profile-row:last-child{border-bottom:none}
+  .p-row-label{font-size:14px;color:var(--text)}
+  .p-row-val{font-size:14px;color:var(--text2);font-family:'DM Mono',monospace}
+
+  /* ERROR */
+  .error-toast{position:absolute;bottom:90px;left:16px;right:16px;background:#C62828;color:#fff;border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;z-index:200;display:none;animation:slide-up 0.3s ease}
+  @keyframes slide-up{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+
+  /* IVA colors */
+  .iva-info{background:rgba(62,198,224,0.1);border-radius:8px;padding:10px 16px;border:1px solid rgba(62,198,224,0.2);margin-top:8px}
+  .iva-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+  .iva-key{color:rgba(255,255,255,0.45)}
+  .iva-val{color:#3EC6E0;font-weight:500;font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="screen">
+    <div class="login-bg">
+      <div class="login-orb orb1"></div>
+      <div class="login-orb orb2"></div>
+    </div>
+    <div class="login-content">
+      <span class="login-logo">💳</span>
+      <div class="login-title">Expense<br>AI</div>
+      <div class="login-sub">Gestión inteligente de gastos</div>
+      <div class="user-list" id="user-list"></div>
+      <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">Entrar →</button>
+    </div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div id="home-screen" class="screen hidden">
+    <div id="home-header" class="app-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="header-greeting">Hola,</div>
+          <div class="header-name" id="home-username">Marcos</div>
+        </div>
+        <div id="home-card-chip" class="card-chip" style="margin-top:4px"></div>
+      </div>
+      <div class="balance-block">
+        <div class="bal-label">Gastado este mes</div>
+        <div class="bal-row">
+          <div class="bal-spent" id="home-spent">€0.00</div>
+          <div class="bal-avail">
+            <div class="bal-avail-label">Disponible</div>
+            <div class="bal-avail-val" id="home-avail">€2000</div>
+          </div>
+        </div>
+        <div class="prog-bg"><div class="prog-fill" id="home-prog" style="width:0%"></div></div>
+        <div class="prog-label">
+          <span id="prog-pct">0%</span>
+          <span id="home-limit">Límite: €2000</span>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <div class="section-header" style="margin-bottom:12px">
+        <span class="section-title">Por categoría</span>
+      </div>
+      <div class="cats-scroll" id="cats-scroll"></div>
+      <div class="section-header" style="margin-top:20px">
+        <span class="section-title">Últimos tickets</span>
+        <button class="see-all" onclick="switchTab('tickets')">Ver todos</button>
+      </div>
+      <div id="home-tickets"></div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('home')" id="nav-home">
+        <span class="nav-icon">⊙</span><span class="nav-label">Inicio</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tickets')" id="nav-tickets">
+        <span class="nav-icon">📋</span><span class="nav-label">Tickets</span>
+      </button>
+      <div style="flex:1;position:relative">
+        <div class="nav-fab" onclick="openScanner()">
+          <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <button class="nav-item" onclick="switchTab('stats')" id="nav-stats">
+        <span class="nav-icon">📊</span><span class="nav-label">Stats</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('profile')" id="nav-profile">
+        <span class="nav-icon">👤</span><span class="nav-label">Perfil</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TICKETS SCREEN (tab, same nav) -->
+  <div id="tickets-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-title">Mis Tickets</div>
+      <div class="filter-row" id="filter-row"></div>
+    </div>
+    <div class="scroll-area" id="tickets-list"></div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="switchTab('home')" id="nav-home2"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
+      <button class="nav-item active" onclick="switchTab('tickets')" id="nav-tickets2"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
+      <div style="flex:1;position:relative"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <button class="nav-item" onclick="switchTab('stats')" id="nav-stats2"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="switchTab('profile')" id="nav-profile2"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- STATS SCREEN -->
+  <div id="stats-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-title">Estadísticas</div>
+    </div>
+    <div class="scroll-area" id="stats-content"></div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="switchTab('home')"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
+      <button class="nav-item" onclick="switchTab('tickets')"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
+      <div style="flex:1;position:relative"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <button class="nav-item active"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div id="profile-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-title">Mi Perfil</div>
+    </div>
+    <div class="scroll-area">
+      <div style="text-align:center;padding:20px 0 28px">
+        <div id="profile-avatar" style="width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#fff;margin-bottom:12px"></div>
+        <div id="profile-name" style="font-size:20px;font-weight:600;color:var(--text)"></div>
+        <div id="profile-card-num" style="font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:4px"></div>
+      </div>
+      <div class="profile-section" id="profile-info"></div>
+      <div class="profile-section">
+        <div class="profile-row" style="cursor:pointer" onclick="logout()">
+          <span class="p-row-label" style="color:#E24B4A">Cerrar sesión</span>
+          <span>→</span>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="switchTab('home')"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
+      <button class="nav-item" onclick="switchTab('tickets')"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
+      <div style="flex:1;position:relative"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <button class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item active"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+    </div>
+  </div>
+
+  <!-- SCANNER OVERLAY -->
+  <div class="overlay hidden" id="scanner-overlay">
+    <div class="overlay-header">
+      <span class="overlay-title">Escanear ticket</span>
+      <button class="overlay-close" onclick="closeScanner()">✕</button>
+    </div>
+    <div class="scan-area">
+      <div class="scan-guide">
+        <div class="scan-corner-piece tl"></div>
+        <div class="scan-corner-piece tr"></div>
+        <div class="scan-corner-piece bl"></div>
+        <div class="scan-corner-piece br"></div>
+        <div class="scan-inner">
+          <div class="scan-beam"></div>
+          <div class="scan-hint">Coloca el ticket dentro del marco</div>
+        </div>
+      </div>
+    </div>
+    <div class="scan-actions">
+      <button class="btn-scan" onclick="triggerCamera()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Hacer foto / Subir imagen
+      </button>
+      <button class="btn-outline" onclick="closeScanner()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING OVERLAY -->
+  <div class="process-overlay hidden" id="process-overlay">
+    <div class="spinner"></div>
+    <div class="process-title">Analizando ticket...</div>
+    <div class="process-sub">Claude Vision está leyendo</div>
+    <div class="process-steps">
+      <div class="p-step active" id="step-upload"><div class="p-step-dot"></div>Subiendo imagen</div>
+      <div class="p-step" id="step-ocr"><div class="p-step-dot"></div>Extrayendo texto (OCR)</div>
+      <div class="p-step" id="step-cat"><div class="p-step-dot"></div>Categorizando con IA</div>
+      <div class="p-step" id="step-iva"><div class="p-step-dot"></div>Calculando IVA deducible</div>
+    </div>
+  </div>
+
+  <!-- RESULT OVERLAY -->
+  <div class="result-overlay hidden" id="result-overlay">
+    <div class="result-header">
+      <div class="result-title">Ticket detectado ✓</div>
+      <button class="overlay-close" onclick="discardResult()">✕</button>
+    </div>
+    <div class="result-scroll" id="result-scroll"></div>
+    <div class="result-footer">
+      <button class="btn-discard" onclick="discardResult()">Descartar</button>
+      <button class="btn-save" onclick="saveTicket()">Guardar ticket</button>
+    </div>
+  </div>
+
+  <div class="error-toast" id="error-toast"></div>
+  <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none">
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://nkhshchyiczmflyvmqez.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_uHNalN6xCBwIIr1nAOMtaw_ixj0NHyR';
+const CLAUDE_API_KEY = '';
+
+// USERS - editar con los datos reales
+const USERS = [
+  {id:'marcos', name:'Marcos Campelo', initials:'MC', color:'#6C63FF', limit:2000, card:'4521', brand:'VISA'},
+  {id:'begona', name:'Begoña García',  initials:'BG', color:'#E91E8C', limit:1500, card:'7834', brand:'MC'},
+  {id:'jacobo', name:'Jacobo Ruiz',    initials:'JC', color:'#00BCD4', limit:2000, card:'2291', brand:'VISA'},
+];
+
+const CATEGORIES = {
+  restaurantes:{label:'Restaurantes', emoji:'🍽️', iva_deducible:50, iva_tipo:10, bg:'#EDE9FF', text:'#5B4ECC'},
+  gasolina:    {label:'Gasolina',     emoji:'⛽', iva_deducible:100,iva_tipo:21, bg:'#FFF3E0', text:'#E65C00'},
+  transporte:  {label:'Transporte',   emoji:'🚗', iva_deducible:100,iva_tipo:10, bg:'#E3F2FD', text:'#1565C0'},
+  moda:        {label:'Moda',         emoji:'👔', iva_deducible:100,iva_tipo:21, bg:'#F3E5F5', text:'#7B1FA2'},
+  textil:      {label:'Textil',       emoji:'🧵', iva_deducible:100,iva_tipo:21, bg:'#FCE4EC', text:'#C62828'},
+  supermercado:{label:'Supermercado', emoji:'🛒', iva_deducible:21, iva_tipo:4,  bg:'#E8F5E9', text:'#2E7D32'},
+  otros:       {label:'Otros',        emoji:'📄', iva_deducible:50, iva_tipo:21, bg:'#F1F1F1', text:'#555555'},
+};
+
+// ── STATE ────────────────────────────────────────────────
+let currentUser = null;
+let tickets = JSON.parse(localStorage.getItem('tickets_v2') || '[]');
+let currentFilter = 'all';
+let pendingResult = null;
+let pendingImageUrl = null;
+
+// ── INIT ─────────────────────────────────────────────────
+function init() {
+  renderUserList();
+  document.getElementById('file-input').addEventListener('change', handleFile);
+}
+
+function renderUserList() {
+  const list = document.getElementById('user-list');
+  list.innerHTML = USERS.map(u => `
+    <div class="user-option" onclick="selectUser('${u.id}')" id="uopt-${u.id}">
+      <div class="u-avatar" style="background:${u.color}">${u.initials}</div>
+      <div>
+        <div class="u-name">${u.name}</div>
+        <div class="u-card">···· ···· ···· ${u.card} · ${u.brand}</div>
+      </div>
+      <span class="u-check">✓</span>
+    </div>`).join('');
+}
+
+function selectUser(id) {
+  document.querySelectorAll('.user-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('uopt-'+id)?.classList.add('selected');
+  currentUser = USERS.find(u => u.id === id);
+  document.getElementById('login-btn').disabled = false;
+}
+
+function doLogin() {
+  if (!currentUser) return;
+  localStorage.setItem('lastUser', currentUser.id);
+  showHomeScreen();
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('lastUser');
+  showScreen('login-screen');
+}
+
+// ── SCREENS ───────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.add('hidden');
+    s.classList.remove('slide-left');
+  });
+  document.getElementById(id)?.classList.remove('hidden');
+}
+
+function showHomeScreen() {
+  showScreen('home-screen');
+  renderHome();
+}
+
+function switchTab(tab) {
+  const map = {home:'home-screen', tickets:'tickets-screen', stats:'stats-screen', profile:'profile-screen'};
+  showScreen(map[tab] || 'home-screen');
+  if (tab === 'home') renderHome();
+  if (tab === 'tickets') renderTicketsList();
+  if (tab === 'stats') renderStats();
+  if (tab === 'profile') renderProfile();
+}
+
+// ── HOME RENDER ──────────────────────────────────────────
+function renderHome() {
+  const u = currentUser;
+  const myTickets = tickets.filter(t => t.userId === u.id);
+  const spent = myTickets.reduce((s,t) => s + (t.importe_total||0), 0);
+  const avail = u.limit - spent;
+  const pct = Math.min(100, (spent/u.limit)*100);
+
+  document.getElementById('home-username').textContent = u.name.split(' ')[0];
+  document.getElementById('home-spent').textContent = '€' + spent.toFixed(2);
+  document.getElementById('home-avail').textContent = '€' + avail.toFixed(2);
+  document.getElementById('home-prog').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct.toFixed(0) + '%';
+  document.getElementById('home-limit').textContent = 'Límite: €' + u.limit;
+  document.getElementById('home-card-chip').innerHTML = cardChipHtml(u);
+
+  // Category totals
+  const catTotals = {};
+  myTickets.forEach(t => { catTotals[t.categoria] = (catTotals[t.categoria]||0) + (t.importe_total||0); });
+  const catsHtml = Object.entries(catTotals).map(([cat, total]) => {
+    const c = CATEGORIES[cat] || CATEGORIES.otros;
+    return `<div class="cat-chip">
+      <div class="cat-emoji">${c.emoji}</div>
+      <div class="cat-name">${c.label}</div>
+      <div class="cat-val">€${total.toFixed(0)}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin gastos aún</div>';
+  document.getElementById('cats-scroll').innerHTML = catsHtml;
+
+  // Recent tickets
+  document.getElementById('home-tickets').innerHTML = myTickets.slice(-5).reverse().map(ticketRowHtml).join('') ||
+    '<div style="text-align:center;padding:32px;color:var(--text3)">Pulsa el botón escáner para añadir tu primer ticket</div>';
+}
+
+function cardChipHtml(u) {
+  const brandHtml = u.brand === 'VISA'
+    ? '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px">VISA</span>'
+    : '<span style="font-size:10px;font-weight:700;background:linear-gradient(90deg,#EB001B,#F79E1B);-webkit-background-clip:text;-webkit-text-fill-color:transparent">MC</span>';
+  return `<div style="width:22px;height:22px;border-radius:50%;background:${u.color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${u.initials}</div>
+    ${brandHtml}
+    <span style="font-size:11px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace">···${u.card}</span>`;
+}
+
+function ticketRowHtml(t) {
+  const c = CATEGORIES[t.categoria] || CATEGORIES.otros;
+  const imgHtml = t.imageDataUrl
+    ? `<img src="${t.imageDataUrl}" style="width:46px;height:46px;object-fit:cover;border-radius:10px">`
+    : c.emoji;
+  return `<div class="ticket-card">
+    <div class="ticket-thumb">${imgHtml}</div>
+    <div class="ticket-info">
+      <div class="ticket-name">${t.nombre || 'Sin nombre'}</div>
+      <div class="ticket-sub">
+        <span class="badge" style="background:${c.bg};color:${c.text}">${c.label}</span>
+        <span style="color:var(--text3)">${t.fecha||''}</span>
+      </div>
+    </div>
+    <div class="ticket-right">
+      <div class="ticket-amount">€${(t.importe_total||0).toFixed(2)}</div>
+      <div class="ticket-ref">${t.ref}</div>
+    </div>
+  </div>`;
+}
+
+// ── TICKETS LIST ─────────────────────────────────────────
+function renderTicketsList() {
+  const u = currentUser;
+  let myTickets = tickets.filter(t => t.userId === u.id);
+  if (currentFilter !== 'all') myTickets = myTickets.filter(t => t.categoria === currentFilter);
+
+  // Filters
+  const allCats = [...new Set(tickets.filter(t=>t.userId===u.id).map(t=>t.categoria))];
+  document.getElementById('filter-row').innerHTML =
+    `<button class="filter-btn ${currentFilter==='all'?'active':''}" onclick="setFilter('all')">Todos</button>` +
+    allCats.map(cat => {
+      const c = CATEGORIES[cat] || CATEGORIES.otros;
+      return `<button class="filter-btn ${currentFilter===cat?'active':''}" onclick="setFilter('${cat}')">${c.emoji} ${c.label}</button>`;
+    }).join('');
+
+  document.getElementById('tickets-list').innerHTML = myTickets.reverse().map(ticketRowHtml).join('') ||
+    '<div style="text-align:center;padding:48px 20px;color:var(--text3)">No hay tickets en esta categoría</div>';
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  renderTicketsList();
+}
+
+// ── STATS ────────────────────────────────────────────────
+function renderStats() {
+  const u = currentUser;
+  const myTickets = tickets.filter(t => t.userId === u.id);
+  const spent = myTickets.reduce((s,t) => s + (t.importe_total||0), 0);
+  const deducible = myTickets.reduce((s,t) => s + (t.iva_deducible_eur||0), 0);
+  const base = myTickets.reduce((s,t) => s + (t.base_imponible||0), 0);
+  const catTotals = {};
+  myTickets.forEach(t => { catTotals[t.categoria] = (catTotals[t.categoria]||0) + (t.importe_total||0); });
+
+  const barMax = Math.max(...Object.values(catTotals), 1);
+  const barsHtml = Object.entries(catTotals).map(([cat, total]) => {
+    const c = CATEGORIES[cat] || CATEGORIES.otros;
+    const w = Math.round((total/barMax)*100);
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
+        <span>${c.emoji} ${c.label}</span>
+        <span style="font-family:'DM Mono',monospace;font-weight:500">€${total.toFixed(2)}</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
+        <div style="width:${w}%;height:6px;border-radius:4px;background:${c.bg};border:1px solid ${c.text}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('stats-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      ${[['Total gastado','€'+spent.toFixed(2),'#6C63FF'],['Base imponible','€'+base.toFixed(2),'#3EC6E0'],['IVA deducible','€'+deducible.toFixed(2),'#2E7D32'],['Nº tickets',''+myTickets.length,'#E65C00']].map(([l,v,col])=>`
+      <div style="background:var(--surface);border-radius:var(--radius);padding:14px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px">${l}</div>
+        <div style="font-size:22px;font-weight:600;color:${col};font-family:'DM Mono',monospace;margin-top:4px">${v}</div>
+      </div>`).join('')}
+    </div>
+    <div style="background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px">Por categoría</div>
+      ${barsHtml || '<div style="color:var(--text3);font-size:13px">Sin datos aún</div>'}
+    </div>`;
+}
+
+// ── PROFILE ──────────────────────────────────────────────
+function renderProfile() {
+  const u = currentUser;
+  const myTickets = tickets.filter(t => t.userId === u.id);
+  const spent = myTickets.reduce((s,t) => s + (t.importe_total||0), 0);
+  document.getElementById('profile-avatar').style.background = u.color;
+  document.getElementById('profile-avatar').textContent = u.initials;
+  document.getElementById('profile-name').textContent = u.name;
+  document.getElementById('profile-card-num').textContent = u.brand + ' ···· ···· ···· ' + u.card;
+  document.getElementById('profile-info').innerHTML = [
+    ['Límite mensual', '€' + u.limit],
+    ['Gastado', '€' + spent.toFixed(2)],
+    ['Disponible', '€' + (u.limit - spent).toFixed(2)],
+    ['Tickets subidos', myTickets.length],
+  ].map(([l,v]) => `<div class="profile-row"><span class="p-row-label">${l}</span><span class="p-row-val">${v}</span></div>`).join('');
+}
+
+// ── SCANNER ───────────────────────────────────────────────
+function openScanner() {
+  document.getElementById('scanner-overlay').classList.remove('hidden');
+}
+function closeScanner() {
+  document.getElementById('scanner-overlay').classList.add('hidden');
+}
+function triggerCamera() {
+  document.getElementById('file-input').click();
+}
+
+// ── FILE / AI PROCESSING ──────────────────────────────────
+async function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+  closeScanner();
+
+  const imageDataUrl = await fileToDataUrl(file);
+  const b64 = imageDataUrl.split(',')[1];
+
+  // Show processing
+  showProcessing(true);
+  animateSteps();
+
+  try {
+    const result = await callClaude(b64, file.type);
+    result.imageDataUrl = imageDataUrl;
+    pendingResult = result;
+    showProcessing(false);
+    showResult(result);
+  } catch (err) {
+    showProcessing(false);
+    showError('Error al analizar: ' + err.message);
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function callClaude(b64, mimeType) {
+  const prompt = `Analiza este ticket/factura comercial español. Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones.
+Formato exacto:
+{"nombre":"nombre del comercio","concepto":"descripción 5 palabras max","fecha":"DD/MM/YYYY o vacío","importe_total":número,"base_imponible":número,"iva_porcentaje":número,"iva_importe":número,"categoria":"restaurantes|gasolina|transporte|moda|textil|supermercado|otros","iva_deducible_pct":número,"razonamiento":"por qué esta categoría en 1 frase"}
+
+Reglas de categorización:
+- restaurantes: bares, restaurantes, cafeterías, comida, catering, hostelería
+- gasolina: estaciones de servicio, combustible, gasolineras (Repsol, Cepsa, BP, etc)
+- transporte: taxi, uber, cabify, bus, metro, tren, parking, peaje
+- moda: Zara, H&M, ropa acabada, accesorios personales, calzado
+- textil: tejidos, telas, pasamanería, materiales textiles, proveedores de tejido
+- supermercado: Mercadona, Lidl, Carrefour, Dia, productos alimentarios generales
+- otros: cualquier otra categoría
+
+IVA deducible en España: gasolina=100%, transporte=100%, textil=100%, moda=100%, restaurantes=50%, supermercado=variable`;
+
+  const resp = await fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'claude-opus-4-20250514',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: [
+          {type:'image', source:{type:'base64', media_type:mimeType, data:b64}},
+          {type:'text', text:prompt}
+        ]
+      }]
+    })
+  });
+
+  if (!resp.ok) throw new Error('API error: ' + resp.status);
+  const data = await resp.json();
+  const text = data.content?.find(b => b.type === 'text')?.text || '{}';
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+let stepTimeout = null;
+function animateSteps() {
+  const steps = ['step-upload','step-ocr','step-cat','step-iva'];
+  steps.forEach(s => { document.getElementById(s)?.classList.remove('active','done'); });
+  document.getElementById(steps[0])?.classList.add('active');
+  let i = 0;
+  function next() {
+    if (i < steps.length) {
+      document.getElementById(steps[i])?.classList.remove('active');
+      document.getElementById(steps[i])?.classList.add('done');
+      i++;
+      if (i < steps.length) {
+        document.getElementById(steps[i])?.classList.add('active');
+        stepTimeout = setTimeout(next, 900);
+      }
+    }
+  }
+  stepTimeout = setTimeout(next, 700);
+}
+
+function showProcessing(show) {
+  document.getElementById('process-overlay').classList.toggle('hidden', !show);
+  if (!show && stepTimeout) clearTimeout(stepTimeout);
+}
+
+function showResult(r) {
+  const c = CATEGORIES[r.categoria] || CATEGORIES.otros;
+  const ivaDeducEur = (r.iva_importe || 0) * (r.iva_deducible_pct || 0) / 100;
+
+  const html = `
+    ${r.imageDataUrl ? `<div class="ticket-preview"><img class="ticket-preview-img" src="${r.imageDataUrl}" alt="ticket"></div>` : ''}
+    <div class="result-card">
+      ${rows([
+        ['Establecimiento', r.nombre || '—'],
+        ['Concepto', r.concepto || '—'],
+        ['Categoría', `<span class="badge" style="background:${c.bg};color:${c.text}">${c.emoji} ${c.label}</span>`],
+        ['Fecha', r.fecha || '—'],
+        ['Base imponible', '€' + (r.base_imponible||0).toFixed(2)],
+        ['IVA ('+( r.iva_porcentaje||21)+'%)', '€' + (r.iva_importe||0).toFixed(2)],
+        ['Total', `<span class="r-value big">€${(r.importe_total||0).toFixed(2)}</span>`],
+      ])}
+    </div>
+    <div class="iva-info">
+      <div class="iva-row"><span class="iva-key">IVA deducible (${r.iva_deducible_pct||0}%)</span><span class="iva-val">€${ivaDeducEur.toFixed(2)}</span></div>
+      <div class="iva-row"><span class="iva-key">Motivo</span><span class="iva-val" style="font-size:11px;text-align:right;max-width:60%">${r.razonamiento||'—'}</span></div>
+    </div>`;
+
+  document.getElementById('result-scroll').innerHTML = html;
+  document.getElementById('result-overlay').classList.remove('hidden');
+}
+
+function rows(pairs) {
+  return pairs.map(([l,v]) => `<div class="result-row"><span class="r-label">${l}</span><span class="r-value">${v}</span></div>`).join('');
+}
+
+function discardResult() {
+  pendingResult = null;
+  document.getElementById('result-overlay').classList.add('hidden');
+}
+
+function saveTicket() {
+  if (!pendingResult) return;
+  const r = pendingResult;
+  const ref = 'T' + Date.now().toString(36).toUpperCase();
+  const ivaDeducEur = (r.iva_importe || 0) * (r.iva_deducible_pct || 0) / 100;
+
+  const ticket = {
+    ref, userId: currentUser.id, userName: currentUser.name,
+    nombre: r.nombre, concepto: r.concepto, fecha: r.fecha || today(),
+    importe_total: r.importe_total || 0,
+    base_imponible: r.base_imponible || 0,
+    iva_porcentaje: r.iva_porcentaje || 21,
+    iva_importe: r.iva_importe || 0,
+    iva_deducible_pct: r.iva_deducible_pct || 0,
+    iva_deducible_eur: ivaDeducEur,
+    categoria: r.categoria || 'otros',
+    razonamiento: r.razonamiento || '',
+    imageDataUrl: r.imageDataUrl || null,
+    createdAt: new Date().toISOString(),
+  };
+
+  tickets.push(ticket);
+  localStorage.setItem('tickets_v2', JSON.stringify(tickets));
+
+  // Send to Supabase if configured
+  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') saveToSupabase(ticket);
+
+  pendingResult = null;
+  document.getElementById('result-overlay').classList.add('hidden');
+  renderHome();
+  showToast('✓ Ticket guardado: ' + ref, '#2E7D32');
+}
+
+function today() {
+  const d = new Date();
+  return d.getDate().toString().padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+
+// ── SUPABASE SYNC ─────────────────────────────────────────
+async function saveToSupabase(ticket) {
+  try {
+    const body = {...ticket};
+    delete body.imageDataUrl; // store separately if needed
+    await fetch(SUPABASE_URL + '/rest/v1/tickets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+  } catch(e) { console.warn('Supabase sync failed:', e); }
+}
+
+// ── ERROR / TOAST ─────────────────────────────────────────
+function showError(msg) {
+  showToast(msg, '#C62828');
+}
+function showToast(msg, color) {
+  const t = document.getElementById('error-toast');
+  t.textContent = msg;
+  t.style.background = color || '#C62828';
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ── AUTO-LOGIN ────────────────────────────────────────────
+function checkAutoLogin() {
+  const lastId = localStorage.getItem('lastUser');
+  if (lastId) {
+    const u = USERS.find(u => u.id === lastId);
+    if (u) { currentUser = u; showHomeScreen(); return; }
+  }
+  showScreen('login-screen');
+}
+
+init();
+checkAutoLogin();
+</script>
+</body>
+</html>
