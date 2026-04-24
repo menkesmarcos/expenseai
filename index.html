@@ -690,7 +690,7 @@ IVA deducible en España: gasolina=100%, transporte=100%, textil=100%, moda=100%
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      model: 'claude-opus-4-20250514',
+      model: 'claude-opus-4-5',
       max_tokens: 1000,
       messages: [{
         role: 'user',
@@ -703,12 +703,14 @@ IVA deducible en España: gasolina=100%, transporte=100%, textil=100%, moda=100%
   });
 
   const respText = await resp.text();
-  console.log('PROXY RESPONSE:', resp.status, respText.substring(0, 300));
-  if (!resp.ok) throw new Error('HTTP ' + resp.status + ': ' + respText.substring(0,200));
+  if (!resp.ok) throw new Error('HTTP ' + resp.status + ': ' + respText.substring(0,300));
   const data = JSON.parse(respText);
+  if (data.error) throw new Error('API: ' + JSON.stringify(data.error));
   const text = data.content?.find(b => b.type === 'text')?.text || '{}';
   const clean = text.replace(/```json|```/g,'').trim();
-  return JSON.parse(clean);
+  const m = clean.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('Sin JSON: ' + text.substring(0,100));
+  return JSON.parse(m[0]);
 }
 
 let stepTimeout = null;
