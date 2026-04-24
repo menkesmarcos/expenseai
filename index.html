@@ -656,7 +656,8 @@ async function handleFile(e) {
     showResult(result);
   } catch (err) {
     showProcessing(false);
-    showError('Error al analizar: ' + err.message);
+    showError('Error: ' + err.message);
+    console.error('FULL ERROR:', JSON.stringify(err), err.stack);
   }
 }
 
@@ -701,8 +702,10 @@ IVA deducible en España: gasolina=100%, transporte=100%, textil=100%, moda=100%
     })
   });
 
-  if (!resp.ok) throw new Error('API error: ' + resp.status);
-  const data = await resp.json();
+  const respText = await resp.text();
+  console.log('PROXY RESPONSE:', resp.status, respText.substring(0, 300));
+  if (!resp.ok) throw new Error('HTTP ' + resp.status + ': ' + respText.substring(0,200));
+  const data = JSON.parse(respText);
   const text = data.content?.find(b => b.type === 'text')?.text || '{}';
   const clean = text.replace(/```json|```/g,'').trim();
   return JSON.parse(clean);
