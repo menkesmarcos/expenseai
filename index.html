@@ -358,6 +358,21 @@
     </div>
   </div>
 
+  <!-- CONFIRM DELETE MODAL -->
+  <div class="ticket-modal-bg hidden" id="confirm-delete-modal" style="align-items:center;justify-content:center;padding:24px">
+    <div style="background:var(--surface);border-radius:20px;width:100%;max-width:340px;overflow:hidden">
+      <div style="padding:24px 24px 0;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">🗑️</div>
+        <div style="font-size:17px;font-weight:600;color:var(--text)">¿Eliminar este ticket?</div>
+        <div style="font-size:14px;color:var(--text2);margin-top:8px;line-height:1.5">Esta acción no se puede deshacer. El ticket se eliminará de todas partes.</div>
+      </div>
+      <div style="display:flex;gap:10px;padding:20px 24px 24px">
+        <button onclick="cancelDelete()" style="flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text)">Cancelar</button>
+        <button onclick="executeDelete()" style="flex:1;padding:13px;background:#E24B4A;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:#fff">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SCANNER OVERLAY - simplified, no black camera preview -->
   <div class="overlay hidden" id="scanner-overlay" style="background:rgba(0,0,0,0.85);justify-content:flex-end">
     <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
@@ -466,6 +481,9 @@ function init() {
   document.getElementById('file-input-camera').addEventListener('change', handleFile);
   document.getElementById('ticket-detail-modal').addEventListener('click', e => {
     if (e.target.id === 'ticket-detail-modal') closeTicketModal();
+  });
+  document.getElementById('confirm-delete-modal').addEventListener('click', e => {
+    if (e.target.id === 'confirm-delete-modal') cancelDelete();
   });
   document.getElementById('file-input-gallery').addEventListener('change', handleFile);
 }
@@ -858,6 +876,48 @@ function discardResult() {
 
 function saveTicket() {
   if (!pendingResult) return;
+  const r = pendingResult;
+  pendingResult = null;
+
+  if (navigator.vibrate) navigator.vibrate(50);
+
+  const ref = 'T' + Date.now().toString(36).toUpperCase();
+  const ticket = {
+    ref,
+    userId: currentUser.id,
+    userName: currentUser.name,
+    nombre: r.nombre || 'Sin nombre',
+    concepto: r.concepto || '',
+    fecha: r.fecha || today(),
+    importe_total: r.importe_total || 0,
+    base_imponible: r.base_imponible || 0,
+    iva_porcentaje: r.iva_porcentaje || 21,
+    iva_importe: r.iva_importe || 0,
+    iva_deducible_pct: r.iva_deducible_pct || 0,
+    iva_deducible_eur: (r.iva_importe || 0) * (r.iva_deducible_pct || 0) / 100,
+    categoria: r.categoria || 'otros',
+    razonamiento: r.razonamiento || '',
+    imageDataUrl: r.imageDataUrl || null,
+    createdAt: new Date().toISOString(),
+  };
+
+  tickets.push(ticket);
+  localStorage.setItem('tickets_v2', JSON.stringify(tickets));
+  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') saveToSupabase(ticket);
+
+  document.getElementById('result-overlay').classList.add('hidden');
+  renderHome();
+  showToast('✓ Ticket guardado · ' + ref, '#2E7D32');
+}
+
+
+function discardResult() {
+  pendingResult = null;
+  document.getElementById('result-overlay').classList.add('hidden');
+}
+
+function saveTicket() {
+  if (!pendingResult) return;
   // Prevent double tap
   const btn = document.querySelector('.btn-save');
   if (btn) { btn.disabled = true; btn.classList.add('btn-pulse'); }
@@ -936,6 +996,13 @@ function openTicketDetail(ref) {
         </div>
         <button class="tm-save-cat" onclick="saveCategory('${t.ref}')">Guardar categoría</button>
       </div>
+
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button onclick="confirmDeleteTicket('${t.ref}')" style="width:100%;padding:12px;background:none;border:1.5px solid #E24B4A;color:#E24B4A;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
+          🗑️ Eliminar este ticket
+        </button>
+      </div>
+      </div>
     </div>`;
 
   document.getElementById('ticket-detail-modal').classList.remove('hidden');
@@ -967,6 +1034,34 @@ function saveCategory(ref) {
     if (activeScreen?.id === 'stats-screen') renderStats();
     showToast('✓ Categoría cambiada a ' + (CATEGORIES[newCat]?.label || newCat), '#2E7D32');
   }, 300);
+}
+
+// ── DELETE TICKET ────────────────────────────────────────────
+let pendingDeleteRef = null;
+
+function confirmDeleteTicket(ref) {
+  pendingDeleteRef = ref;
+  document.getElementById('confirm-delete-modal').classList.remove('hidden');
+}
+
+function cancelDelete() {
+  pendingDeleteRef = null;
+  document.getElementById('confirm-delete-modal').classList.add('hidden');
+}
+
+function executeDelete() {
+  if (!pendingDeleteRef) return;
+  if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+  tickets = tickets.filter(t => t.ref !== pendingDeleteRef);
+  localStorage.setItem('tickets_v2', JSON.stringify(tickets));
+  pendingDeleteRef = null;
+  document.getElementById('confirm-delete-modal').classList.add('hidden');
+  closeTicketModal();
+  const activeScreen = document.querySelector('.screen:not(.hidden)');
+  if (activeScreen?.id === 'home-screen') renderHome();
+  if (activeScreen?.id === 'tickets-screen') renderTicketsList();
+  if (activeScreen?.id === 'stats-screen') renderStats();
+  showToast('Ticket eliminado', '#E24B4A');
 }
 
 // ── SUPABASE SYNC ─────────────────────────────────────────
