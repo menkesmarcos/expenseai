@@ -209,7 +209,12 @@
   .tm-reason-label{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
   .tm-reason-text{font-size:13px;color:var(--text2);line-height:1.5}
   .tm-cat-select{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--accent);background:var(--surface);font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);margin-top:8px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236C63FF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-  .tm-save-cat{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
+  .tm-save-cat{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;transition:transform 0.1s,opacity 0.1s;active:scale(0.97)}
+  .tm-save-cat:active{transform:scale(0.96);opacity:0.85}
+  .btn-save:active{transform:scale(0.96);opacity:0.9}
+  .btn-primary:active{transform:scale(0.97)}
+  @keyframes btn-success{0%{transform:scale(1)}40%{transform:scale(0.94)}100%{transform:scale(1)}}
+  .btn-pulse{animation:btn-success 0.25s ease}
 
   /* IVA colors */
   .iva-info{background:rgba(62,198,224,0.1);border-radius:8px;padding:10px 16px;border:1px solid rgba(62,198,224,0.2);margin-top:8px}
@@ -819,7 +824,7 @@ function showProcessing(show) {
 
 function showResult(r) {
   const c = CATEGORIES[r.categoria] || CATEGORIES.otros;
-  const ivaDeducEur = (r.iva_importe || 0) * (r.iva_deducible_pct || 0) / 100;
+  // iva deducible removed - not shown to user
 
   const html = `
     ${r.imageDataUrl ? `<div class="ticket-preview"><img class="ticket-preview-img" src="${r.imageDataUrl}" alt="ticket"></div>` : ''}
@@ -835,8 +840,7 @@ function showResult(r) {
       ])}
     </div>
     <div class="iva-info">
-      <div class="iva-row"><span class="iva-key">IVA deducible (${r.iva_deducible_pct||0}%)</span><span class="iva-val">€${ivaDeducEur.toFixed(2)}</span></div>
-      <div class="iva-row"><span class="iva-key">Motivo</span><span class="iva-val" style="font-size:11px;text-align:right;max-width:60%">${r.razonamiento||'—'}</span></div>
+      <div class="iva-row"><span class="iva-key">Motivo IA</span><span class="iva-val" style="font-size:11px;text-align:right;max-width:65%;line-height:1.4">${r.razonamiento||'—'}</span></div>
     </div>`;
 
   document.getElementById('result-scroll').innerHTML = html;
@@ -854,9 +858,13 @@ function discardResult() {
 
 function saveTicket() {
   if (!pendingResult) return;
+  // Prevent double tap
+  const btn = document.querySelector('.btn-save');
+  if (btn) { btn.disabled = true; btn.classList.add('btn-pulse'); }
+  if (navigator.vibrate) navigator.vibrate(50);
   const r = pendingResult;
   const ref = 'T' + Date.now().toString(36).toUpperCase();
-  const ivaDeducEur = (r.iva_importe || 0) * (r.iva_deducible_pct || 0) / 100;
+  // iva deducible removed - not shown to user
 
   const ticket = {
     ref, userId: currentUser.id, userName: currentUser.name,
@@ -882,7 +890,8 @@ function saveTicket() {
   pendingResult = null;
   document.getElementById('result-overlay').classList.add('hidden');
   renderHome();
-  showToast('✓ Ticket guardado: ' + ref, '#2E7D32');
+  showToast('✓ Ticket guardado · ' + ref, '#2E7D32');
+  if (btn) setTimeout(() => { btn.disabled = false; }, 500);
 }
 
 function today() {
@@ -912,7 +921,7 @@ function openTicketDetail(ref) {
         ['Base imponible', '€' + (t.base_imponible||0).toFixed(2), 'mono'],
         ['IVA (' + (t.iva_porcentaje||0) + '%)', '€' + (t.iva_importe||0).toFixed(2), 'mono'],
         ['Total pagado', '€' + (t.importe_total||0).toFixed(2), 'mono'],
-        ['IVA deducible (' + (t.iva_deducible_pct||0) + '%)', '€' + ivaDeducEur, 'mono green'],
+
       ].map(([l,v,cls]) => `<div class="tm-field"><span class="tm-label">${l}</span><span class="tm-value ${cls}">${v}</span></div>`).join('')}
 
       ${t.razonamiento ? `<div class="tm-reason">
@@ -939,22 +948,25 @@ function closeTicketModal() {
 function saveCategory(ref) {
   const select = document.getElementById('cat-select-' + ref);
   if (!select) return;
+  const btn = document.querySelector('.tm-save-cat');
+  if (btn) { btn.disabled = true; btn.textContent = '✓ Guardado'; }
+  if (navigator.vibrate) navigator.vibrate(60);
   const newCat = select.value;
   const idx = tickets.findIndex(t => t.ref === ref);
   if (idx === -1) return;
   tickets[idx].categoria = newCat;
-  // recalculate iva deducible based on new category
   const cat = CATEGORIES[newCat] || CATEGORIES.otros;
   tickets[idx].iva_deducible_pct = cat.iva_deducible;
   tickets[idx].iva_deducible_eur = (tickets[idx].iva_importe || 0) * cat.iva_deducible / 100;
   localStorage.setItem('tickets_v2', JSON.stringify(tickets));
-  closeTicketModal();
-  // refresh current view
-  const activeScreen = document.querySelector('.screen:not(.hidden)');
-  if (activeScreen?.id === 'home-screen') renderHome();
-  if (activeScreen?.id === 'tickets-screen') renderTicketsList();
-  if (activeScreen?.id === 'stats-screen') renderStats();
-  showToast('✓ Categoría actualizada', '#2E7D32');
+  setTimeout(() => {
+    closeTicketModal();
+    const activeScreen = document.querySelector('.screen:not(.hidden)');
+    if (activeScreen?.id === 'home-screen') renderHome();
+    if (activeScreen?.id === 'tickets-screen') renderTicketsList();
+    if (activeScreen?.id === 'stats-screen') renderStats();
+    showToast('✓ Categoría cambiada a ' + (CATEGORIES[newCat]?.label || newCat), '#2E7D32');
+  }, 300);
 }
 
 // ── SUPABASE SYNC ─────────────────────────────────────────
