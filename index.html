@@ -8,411 +8,307 @@
 <meta name="apple-mobile-web-app-title" content="ExpenseAI">
 <meta name="theme-color" content="#1a1a2e">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <title>ExpenseAI</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  :root{
-    --bg:#f7f7f5;--surface:#ffffff;--surface2:#f0f0ec;
-    --text:#1a1a2e;--text2:#6b6b80;--text3:#a0a0b0;
-    --accent:#6C63FF;--accent2:#3EC6E0;--dark:#1a1a2e;
-    --border:rgba(0,0,0,0.08);--radius:16px;--radius-sm:10px;
-    --shadow:0 4px 24px rgba(0,0,0,0.08);
-  }
-  html,body{height:100%;overflow:hidden;background:var(--dark)}
-  #app{height:100vh;display:flex;flex-direction:column;background:var(--bg);max-width:430px;margin:0 auto;position:relative;overflow:hidden}
-  
-  /* SCREENS */
-  .screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform 0.32s cubic-bezier(0.4,0,0.2,1),opacity 0.32s;background:var(--bg)}
-  .screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
-  .screen.slide-left{transform:translateX(-100%);opacity:0;pointer-events:none}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f7f7f5;--surface:#fff;--surface2:#f0f0ec;
+  --text:#1a1a2e;--text2:#6b6b80;--text3:#a0a0b0;
+  --accent:#6C63FF;--accent2:#3EC6E0;--dark:#1a1a2e;
+  --border:rgba(0,0,0,0.08);--radius:16px;
+}
+html,body{height:100%;overflow:hidden;background:#000}
+#app{height:100vh;display:flex;flex-direction:column;background:var(--bg);max-width:430px;margin:0 auto;position:relative;overflow:hidden}
 
-  /* STATUS BAR */
-  .status{background:var(--dark);padding:env(safe-area-inset-top,14px) 20px 10px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-  .status-time{color:#fff;font-size:14px;font-weight:500;font-family:'DM Mono',monospace}
-  .status-icons{display:flex;gap:5px;align-items:center}
-  .status-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.6)}
+/* SCREENS */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.screen.hidden{display:none}
 
-  /* LOGIN */
-  #login-screen{background:var(--dark);justify-content:flex-end;padding-bottom:env(safe-area-inset-bottom,24px)}
-  .login-bg{position:absolute;inset:0;background:linear-gradient(160deg,#0d0d1a 0%,#1a1a2e 50%,#0a1628 100%)}
-  .login-orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.15}
-  .orb1{width:300px;height:300px;background:#6C63FF;top:-50px;right:-80px}
-  .orb2{width:200px;height:200px;background:#3EC6E0;bottom:200px;left:-60px}
-  .login-content{position:relative;z-index:2;padding:40px 28px 32px}
-  .login-logo{font-size:48px;margin-bottom:16px;display:block}
-  .login-title{font-size:34px;font-weight:600;color:#fff;letter-spacing:-1px;line-height:1.1}
-  .login-sub{font-size:15px;color:rgba(255,255,255,0.45);margin-top:8px;margin-bottom:36px}
-  .user-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
-  .user-option{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all 0.15s;-webkit-user-select:none}
-  .user-option.selected{background:rgba(108,99,255,0.2);border-color:rgba(108,99,255,0.6)}
-  .user-option:active{transform:scale(0.98)}
-  .u-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
-  .u-name{font-size:15px;font-weight:500;color:#fff}
-  .u-card{font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;margin-top:1px}
-  .u-check{margin-left:auto;color:#6C63FF;font-size:20px;opacity:0}
-  .user-option.selected .u-check{opacity:1}
-  .btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:transform 0.1s,opacity 0.2s;letter-spacing:0.2px}
-  .btn-primary:active{transform:scale(0.98)}
-  .btn-primary:disabled{opacity:0.35;cursor:not-allowed}
+/* STATUS BAR */
+.status{background:var(--dark);padding:env(safe-area-inset-top,14px) 20px 10px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.status-time{color:#fff;font-size:14px;font-weight:500;font-family:'DM Mono',monospace}
 
-  /* NAV BAR */
-  .bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 0 env(safe-area-inset-bottom,12px);flex-shrink:0;position:relative;z-index:10}
-  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer;transition:color 0.15s;color:var(--text3);border:none;background:none;font-family:'DM Sans',sans-serif}
-  .nav-item.active{color:var(--accent)}
-  .nav-icon{font-size:22px;line-height:1}
-  .nav-label{font-size:10px;font-weight:500}
-  .nav-fab{position:absolute;left:50%;transform:translateX(-50%);top:-24px;width:52px;height:52px;border-radius:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(108,99,255,0.4);transition:transform 0.1s}
-  .nav-fab:active{transform:translateX(-50%) scale(0.94)}
-  .nav-fab svg{width:22px;height:22px;fill:#fff}
+/* LOGIN */
+#login-screen{background:var(--dark)}
+.login-bg{position:absolute;inset:0;background:linear-gradient(160deg,#0d0d1a 0%,#1a1a2e 50%,#0a1628 100%)}
+.login-orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.15}
+.orb1{width:300px;height:300px;background:#6C63FF;top:-50px;right:-80px}
+.orb2{width:200px;height:200px;background:#3EC6E0;bottom:200px;left:-60px}
+.login-content{position:relative;z-index:2;padding:40px 28px 32px;display:flex;flex-direction:column;height:100%}
+.login-logo{font-size:48px;margin-bottom:16px}
+.login-title{font-size:34px;font-weight:600;color:#fff;letter-spacing:-1px;line-height:1.1}
+.login-sub{font-size:15px;color:rgba(255,255,255,0.45);margin-top:8px;margin-bottom:36px}
+.user-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.user-option{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:14px 16px;cursor:pointer}
+.user-option.selected{background:rgba(108,99,255,0.2);border-color:rgba(108,99,255,0.6)}
+.u-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.u-name{font-size:15px;font-weight:500;color:#fff}
+.u-card-text{font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;margin-top:1px}
+.u-check{margin-left:auto;color:#6C63FF;font-size:20px;opacity:0}
+.user-option.selected .u-check{opacity:1}
+.btn-login{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-login:disabled{opacity:0.35}
+.btn-login:active{opacity:0.85;transform:scale(0.98)}
 
-  /* HOME */
-  .app-header{background:var(--dark);padding:16px 20px 20px;flex-shrink:0}
-  .header-greeting{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:2px}
-  .header-name{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
-  .balance-block{background:rgba(255,255,255,0.07);border-radius:var(--radius);padding:18px;margin-top:14px}
-  .bal-label{font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.8px}
-  .bal-row{display:flex;align-items:baseline;justify-content:space-between;margin-top:4px}
-  .bal-spent{font-size:32px;font-weight:300;color:#fff;font-family:'DM Mono',monospace;letter-spacing:-1px}
-  .bal-avail{text-align:right}
-  .bal-avail-label{font-size:11px;color:rgba(255,255,255,0.4)}
-  .bal-avail-val{font-size:16px;font-weight:500;color:var(--accent2);font-family:'DM Mono',monospace}
-  .prog-bg{background:rgba(255,255,255,0.1);border-radius:4px;height:4px;margin-top:14px;overflow:hidden}
-  .prog-fill{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.6s ease}
-  .prog-label{font-size:11px;color:rgba(255,255,255,0.35);margin-top:6px;display:flex;justify-content:space-between}
+/* BOTTOM NAV */
+.bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 0 env(safe-area-inset-bottom,12px);flex-shrink:0;z-index:10;position:relative}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer;color:var(--text3);border:none;background:none;font-family:'DM Sans',sans-serif}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:22px;line-height:1}
+.nav-label{font-size:10px;font-weight:500}
+.nav-fab-wrap{flex:1;position:relative}
+.nav-fab{position:absolute;left:50%;transform:translateX(-50%);top:-24px;width:52px;height:52px;border-radius:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:3px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(108,99,255,0.4)}
+.nav-fab:active{transform:translateX(-50%) scale(0.92)}
+.nav-fab svg{width:22px;height:22px;fill:#fff}
 
-  /* CARD BRAND */
-  .card-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px 4px 6px;width:fit-content}
-  .chip-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
-  .chip-num{font-size:12px;color:rgba(255,255,255,0.7);font-family:'DM Mono',monospace}
+/* HOME */
+.app-header{background:var(--dark);padding:16px 20px 20px;flex-shrink:0}
+.header-greeting{font-size:13px;color:rgba(255,255,255,0.5)}
+.header-name{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+.balance-block{background:rgba(255,255,255,0.07);border-radius:var(--radius);padding:18px;margin-top:14px}
+.bal-label{font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.8px}
+.bal-row{display:flex;align-items:baseline;justify-content:space-between;margin-top:4px}
+.bal-spent{font-size:32px;font-weight:300;color:#fff;font-family:'DM Mono',monospace;letter-spacing:-1px}
+.bal-avail-label{font-size:11px;color:rgba(255,255,255,0.4);text-align:right}
+.bal-avail-val{font-size:16px;font-weight:500;color:var(--accent2);font-family:'DM Mono',monospace;text-align:right}
+.prog-bg{background:rgba(255,255,255,0.1);border-radius:4px;height:4px;margin-top:14px;overflow:hidden}
+.prog-fill{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.6s}
+.prog-labels{font-size:11px;color:rgba(255,255,255,0.35);margin-top:6px;display:flex;justify-content:space-between}
+.card-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px 4px 6px;margin-top:10px}
 
-  /* SCROLL CONTENT */
-  .scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px}
-  .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-  .section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px}
-  .see-all{font-size:12px;color:var(--accent);font-weight:500;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+/* SCROLL */
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 8px}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.section-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px}
+.see-all{font-size:12px;color:var(--accent);font-weight:500;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
 
-  /* CATEGORY CHIPS */
-  .cats-scroll{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
-  .cats-scroll::-webkit-scrollbar{display:none}
-  .cat-chip{background:var(--surface);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border);flex-shrink:0;min-width:90px}
-  .cat-emoji{font-size:20px;margin-bottom:4px}
-  .cat-name{font-size:11px;color:var(--text2);font-weight:400}
-  .cat-val{font-size:16px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;margin-top:2px}
+/* CATEGORY CHIPS */
+.cats-scroll{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
+.cats-scroll::-webkit-scrollbar{display:none}
+.cat-chip{background:var(--surface);border-radius:10px;padding:12px 14px;border:1px solid var(--border);flex-shrink:0;min-width:88px}
+.cat-chip-emoji{font-size:20px;margin-bottom:4px}
+.cat-chip-name{font-size:11px;color:var(--text2)}
+.cat-chip-val{font-size:16px;font-weight:600;font-family:'DM Mono',monospace;margin-top:2px}
 
-  /* TICKET LIST */
-  .ticket-card{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:var(--radius);padding:13px 14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:transform 0.1s,box-shadow 0.1s}
-  .ticket-card:active{transform:scale(0.98)}
-  .ticket-thumb{width:46px;height:46px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
-  .ticket-thumb img{width:100%;height:100%;object-fit:cover;border-radius:10px}
-  .ticket-info{flex:1;min-width:0}
-  .ticket-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ticket-sub{font-size:11px;color:var(--text2);margin-top:2px;display:flex;align-items:center;gap:6px}
-  .badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block}
-  .ticket-right{text-align:right;flex-shrink:0}
-  .ticket-amount{font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text)}
-  .ticket-ref{font-size:10px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+/* TICKET ROW */
+.ticket-card{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:var(--radius);padding:13px 14px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer}
+.ticket-card:active{background:var(--surface2)}
+.ticket-thumb{width:46px;height:46px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden}
+.ticket-thumb img{width:100%;height:100%;object-fit:cover}
+.ticket-info{flex:1;min-width:0}
+.ticket-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket-sub{font-size:11px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:6px}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block}
+.ticket-right{text-align:right;flex-shrink:0}
+.ticket-amount{font-size:15px;font-weight:600;font-family:'DM Mono',monospace}
+.ticket-ref{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px}
 
-  /* SCANNER OVERLAY */
-  .overlay{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;background:#000;overflow:hidden}
-  .overlay.hidden{display:none}
-  .overlay-header{padding:env(safe-area-inset-top,16px) 20px 12px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.6)}
-  .overlay-title{color:#fff;font-size:16px;font-weight:500}
-  .overlay-close{background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:17px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .scan-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
-  .scan-guide{width:260px;height:340px;border-radius:var(--radius);position:relative}
-  .scan-corner-piece{position:absolute;width:24px;height:24px}
-  .scan-corner-piece.tl{top:0;left:0;border-top:2.5px solid var(--accent2);border-left:2.5px solid var(--accent2);border-radius:4px 0 0 0}
-  .scan-corner-piece.tr{top:0;right:0;border-top:2.5px solid var(--accent2);border-right:2.5px solid var(--accent2);border-radius:0 4px 0 0}
-  .scan-corner-piece.bl{bottom:0;left:0;border-bottom:2.5px solid var(--accent2);border-left:2.5px solid var(--accent2);border-radius:0 0 0 4px}
-  .scan-corner-piece.br{bottom:0;right:0;border-bottom:2.5px solid var(--accent2);border-right:2.5px solid var(--accent2);border-radius:0 0 4px 0}
-  .scan-inner{width:240px;height:320px;border-radius:12px;border:1px solid rgba(108,99,255,0.25);position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .scan-beam{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent 0%,var(--accent) 30%,var(--accent2) 70%,transparent 100%);top:10%;animation:beam 2s ease-in-out infinite}
-  @keyframes beam{0%,100%{top:10%;opacity:0.8}50%{top:90%;opacity:1}}
-  .scan-hint{color:rgba(255,255,255,0.4);font-size:13px;text-align:center;padding:0 20px}
-  .scan-actions{padding:20px;display:flex;flex-direction:column;gap:10px;padding-bottom:env(safe-area-inset-bottom,24px)}
-  .btn-scan{width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px}
-  .btn-outline{width:100%;padding:14px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+/* SCREEN HEADER */
+.screen-header{background:var(--dark);padding:env(safe-area-inset-top,16px) 20px 16px;flex-shrink:0}
+.screen-title{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-top:12px}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
-  /* PROCESSING OVERLAY */
-  .process-overlay{position:absolute;inset:0;z-index:110;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-  .process-overlay.hidden{display:none}
-  .spinner{width:52px;height:52px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .process-title{color:#fff;font-size:18px;font-weight:500}
-  .process-sub{color:rgba(255,255,255,0.4);font-size:13px}
-  .process-steps{display:flex;flex-direction:column;gap:8px;margin-top:8px;width:240px}
-  .p-step{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.35)}
-  .p-step.done{color:rgba(255,255,255,0.7)}
-  .p-step.active{color:#fff}
-  .p-step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);flex-shrink:0}
-  .p-step.done .p-step-dot{background:#3EC6E0}
-  .p-step.active .p-step-dot{background:var(--accent);box-shadow:0 0 8px rgba(108,99,255,0.8);animation:pulse 1s ease-in-out infinite}
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+/* OVERLAYS — all z-index managed properly */
+/* Scanner sheet */
+.sheet-overlay{position:absolute;inset:0;z-index:100;background:rgba(0,0,0,0.7);display:flex;flex-direction:column;justify-content:flex-end}
+.sheet-overlay.hidden{display:none}
+.sheet-content{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 20px env(safe-area-inset-bottom,32px)}
+.sheet-title{font-size:18px;font-weight:600;color:var(--text)}
+.sheet-sub{font-size:13px;color:var(--text2);margin-top:2px;margin-bottom:20px}
+.sheet-btn{width:100%;padding:16px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:12px;border:none;margin-bottom:10px;text-align:left}
+.sheet-btn:active{opacity:0.8;transform:scale(0.98)}
+.sheet-btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.sheet-btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)!important}
+.sheet-btn-cancel{background:none;color:var(--text2);border:1px solid var(--border)!important;justify-content:center;margin-bottom:0}
+.sheet-btn-icon{font-size:26px;flex-shrink:0}
+.sheet-btn-label{font-size:15px;font-weight:600}
+.sheet-btn-desc{font-size:12px;font-weight:400;opacity:0.75;margin-top:1px}
 
-  /* RESULT OVERLAY */
-  .result-overlay{position:absolute;inset:0;z-index:120;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;padding:env(safe-area-inset-top,16px) 0 env(safe-area-inset-bottom,16px)}
-  .result-overlay.hidden{display:none}
-  .result-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
-  .result-title{color:#fff;font-size:18px;font-weight:600}
-  .result-scroll{flex:1;overflow-y:auto;padding:0 20px}
-  .ticket-preview{background:rgba(255,255,255,0.05);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
-  .ticket-preview-img{width:100%;max-height:200px;object-fit:contain;background:#111}
-  .result-card{background:rgba(255,255,255,0.06);border-radius:var(--radius);overflow:hidden}
-  .result-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
-  .result-row:last-child{border-bottom:none}
-  .r-label{font-size:12px;color:rgba(255,255,255,0.45)}
-  .r-value{font-size:13px;font-weight:500;color:#fff;text-align:right;max-width:60%;word-break:break-word}
-  .r-value.big{font-size:18px;font-family:'DM Mono',monospace;color:#fff}
-  .r-value.deducible{color:#3EC6E0}
-  .result-footer{padding:16px 20px;display:flex;gap:10px}
-  .btn-save{flex:1;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
-  .btn-discard{padding:15px 18px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius);font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif}
+/* Processing overlay */
+.process-overlay{position:absolute;inset:0;z-index:200;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.process-overlay.hidden{display:none}
+.spinner{width:52px;height:52px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.p-step{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.35);width:220px}
+.p-step.done{color:rgba(255,255,255,0.7)}
+.p-step.active{color:#fff}
+.p-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);flex-shrink:0}
+.p-step.done .p-dot{background:#3EC6E0}
+.p-step.active .p-dot{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
 
-  /* TICKETS SCREEN */
-  .screen-header{background:var(--dark);padding:env(safe-area-inset-top,16px) 20px 16px;flex-shrink:0}
-  .screen-title{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
-  .filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-top:12px}
-  .filter-row::-webkit-scrollbar{display:none}
-  .filter-btn{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;flex-shrink:0;transition:all 0.15s}
-  .filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+/* Result overlay */
+.result-overlay{position:absolute;inset:0;z-index:200;background:rgba(0,0,0,0.88);display:flex;flex-direction:column}
+.result-overlay.hidden{display:none}
+.result-header{padding:env(safe-area-inset-top,16px) 20px 12px;display:flex;align-items:center;justify-content:space-between}
+.result-title{color:#fff;font-size:18px;font-weight:600}
+.result-scroll{flex:1;overflow-y:auto;padding:0 20px}
+.ticket-preview-img{width:100%;max-height:200px;object-fit:contain;background:#111;border-radius:12px;margin-bottom:12px}
+.result-card{background:rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;margin-bottom:10px}
+.result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.result-row:last-child{border-bottom:none}
+.r-label{font-size:12px;color:rgba(255,255,255,0.45);flex-shrink:0;margin-right:10px}
+.r-value{font-size:13px;font-weight:500;color:#fff;text-align:right;word-break:break-word;max-width:65%}
+.r-value.big{font-size:20px;font-family:'DM Mono',monospace}
+.result-reason{background:rgba(108,99,255,0.15);border-radius:10px;padding:12px 14px;border-left:3px solid var(--accent);margin-bottom:12px}
+.result-reason-label{font-size:10px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
+.result-reason-text{font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5}
+.result-footer{padding:16px 20px;display:flex;gap:10px;padding-bottom:env(safe-area-inset-bottom,16px)}
+.btn-discard{padding:15px 16px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius);font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.btn-discard:active{opacity:0.7}
+.btn-save{flex:1;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.2px}
+.btn-save:active{opacity:0.85;transform:scale(0.98)}
 
-  /* PROFILE SCREEN */
-  .profile-section{background:var(--surface);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;border:1px solid var(--border)}
-  .profile-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
-  .profile-row:last-child{border-bottom:none}
-  .p-row-label{font-size:14px;color:var(--text)}
-  .p-row-val{font-size:14px;color:var(--text2);font-family:'DM Mono',monospace}
+/* Ticket detail sheet */
+.detail-sheet-overlay{position:absolute;inset:0;z-index:100;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end}
+.detail-sheet-overlay.hidden{display:none}
+.detail-sheet{background:var(--surface);border-radius:24px 24px 0 0;max-height:90vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,16px)}
+.detail-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+.detail-title{font-size:16px;font-weight:600;color:var(--text)}
+.detail-close{background:var(--surface2);border:none;width:32px;height:32px;border-radius:16px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.detail-close:active{opacity:0.6}
+.detail-img{width:100%;max-height:220px;object-fit:contain;background:var(--surface2)}
+.detail-body{padding:16px 20px}
+.detail-field{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+.detail-field:last-child{border-bottom:none}
+.df-label{font-size:12px;color:var(--text2);flex-shrink:0;margin-right:12px}
+.df-value{font-size:14px;font-weight:500;color:var(--text);text-align:right;word-break:break-word;max-width:65%}
+.df-value.mono{font-family:'DM Mono',monospace}
+.detail-reason{background:rgba(108,99,255,0.08);border-radius:10px;padding:12px 14px;border-left:3px solid var(--accent);margin:12px 0}
+.detail-reason-label{font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
+.detail-reason-text{font-size:13px;color:var(--text2);line-height:1.5}
+.cat-select{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--accent);background:var(--surface);font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);margin-top:8px}
+.btn-save-cat{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
+.btn-save-cat:active{opacity:0.85;transform:scale(0.98)}
+.btn-delete{width:100%;padding:13px;background:none;border:1.5px solid #E24B4A;color:#E24B4A;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
+.btn-delete:active{background:rgba(226,75,74,0.1)}
 
-  /* ERROR */
-  .error-toast{position:absolute;bottom:90px;left:16px;right:16px;background:#C62828;color:#fff;border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;z-index:200;display:none;animation:slide-up 0.3s ease}
-  @keyframes slide-up{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+/* Confirm delete dialog */
+.dialog-overlay{position:absolute;inset:0;z-index:300;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:24px}
+.dialog-overlay.hidden{display:none}
+.dialog-box{background:var(--surface);border-radius:20px;width:100%;max-width:320px;overflow:hidden}
+.dialog-body{padding:24px 24px 0;text-align:center}
+.dialog-icon{font-size:40px;margin-bottom:12px}
+.dialog-title{font-size:17px;font-weight:600;color:var(--text)}
+.dialog-text{font-size:14px;color:var(--text2);margin-top:8px;line-height:1.5}
+.dialog-buttons{display:flex;gap:10px;padding:20px 20px 20px}
+.btn-cancel-dialog{flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text)}
+.btn-cancel-dialog:active{opacity:0.7}
+.btn-confirm-delete{flex:1;padding:13px;background:#E24B4A;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:#fff}
+.btn-confirm-delete:active{opacity:0.8}
 
-  /* TICKET DETAIL MODAL */
-  .ticket-modal-bg{position:absolute;inset:0;z-index:150;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end}
-  .ticket-modal-bg.hidden{display:none}
-  .ticket-modal{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,16px)}
-  .tm-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
-  .tm-title{font-size:17px;font-weight:600}
-  .tm-close{background:var(--surface2);border:none;width:32px;height:32px;border-radius:16px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .tm-img{width:100%;max-height:220px;object-fit:contain;background:#f0f0eb;border-radius:0}
-  .tm-body{padding:16px 20px}
-  .tm-field{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
-  .tm-field:last-child{border-bottom:none}
-  .tm-label{font-size:12px;color:var(--text2);flex-shrink:0;margin-right:12px}
-  .tm-value{font-size:14px;font-weight:500;color:var(--text);text-align:right;word-break:break-word;max-width:65%}
-  .tm-value.mono{font-family:'DM Mono',monospace}
-  .tm-value.green{color:#2E7D32}
-  .tm-value.accent{color:var(--accent)}
-  .tm-reason{background:rgba(108,99,255,0.08);border-radius:10px;padding:12px 14px;margin:12px 0;border-left:3px solid var(--accent)}
-  .tm-reason-label{font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
-  .tm-reason-text{font-size:13px;color:var(--text2);line-height:1.5}
-  .tm-cat-select{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--accent);background:var(--surface);font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);margin-top:8px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236C63FF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-  .tm-save-cat{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;transition:transform 0.1s,opacity 0.1s;active:scale(0.97)}
-  .tm-save-cat:active{transform:scale(0.96);opacity:0.85}
-  .btn-save:active{transform:scale(0.96);opacity:0.9}
-  .btn-primary:active{transform:scale(0.97)}
-  @keyframes btn-success{0%{transform:scale(1)}40%{transform:scale(0.94)}100%{transform:scale(1)}}
-  .btn-pulse{animation:btn-success 0.25s ease}
+/* Toast */
+.toast{position:absolute;bottom:90px;left:16px;right:16px;border-radius:12px;padding:13px 16px;font-size:14px;font-weight:500;color:#fff;z-index:500;display:none;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+@keyframes toast-in{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.toast.show{display:block;animation:toast-in 0.25s ease}
 
-  /* IVA colors */
-  .iva-info{background:rgba(62,198,224,0.1);border-radius:8px;padding:10px 16px;border:1px solid rgba(62,198,224,0.2);margin-top:8px}
-  .iva-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
-  .iva-key{color:rgba(255,255,255,0.45)}
-  .iva-val{color:#3EC6E0;font-weight:500;font-family:'DM Mono',monospace}
+/* Profile */
+.profile-section{background:var(--surface);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;border:1px solid var(--border)}
+.profile-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.profile-row:last-child{border-bottom:none}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- LOGIN SCREEN -->
+  <!-- LOGIN -->
   <div id="login-screen" class="screen">
-    <div class="login-bg">
-      <div class="login-orb orb1"></div>
-      <div class="login-orb orb2"></div>
-    </div>
+    <div class="login-bg"><div class="login-orb orb1"></div><div class="login-orb orb2"></div></div>
     <div class="login-content">
-      <span class="login-logo">💳</span>
+      <div class="login-logo">💳</div>
       <div class="login-title">Expense<br>AI</div>
       <div class="login-sub">Gestión inteligente de gastos</div>
       <div class="user-list" id="user-list"></div>
-      <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">Entrar →</button>
+      <button class="btn-login" id="login-btn" disabled onclick="doLogin()">Entrar →</button>
     </div>
   </div>
 
-  <!-- HOME SCREEN -->
+  <!-- HOME -->
   <div id="home-screen" class="screen hidden">
-    <div id="home-header" class="app-header">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div class="header-greeting">Hola,</div>
-          <div class="header-name" id="home-username">Marcos</div>
-        </div>
-        <div id="home-card-chip" class="card-chip" style="margin-top:4px"></div>
-      </div>
-      <div class="balance-block">
-        <div class="bal-label">Gastado este mes</div>
-        <div class="bal-row">
-          <div class="bal-spent" id="home-spent">€0.00</div>
-          <div class="bal-avail">
-            <div class="bal-avail-label">Disponible</div>
-            <div class="bal-avail-val" id="home-avail">€2000</div>
-          </div>
-        </div>
-        <div class="prog-bg"><div class="prog-fill" id="home-prog" style="width:0%"></div></div>
-        <div class="prog-label">
-          <span id="prog-pct">0%</span>
-          <span id="home-limit">Límite: €2000</span>
-        </div>
-      </div>
-    </div>
-    <div class="scroll-area">
-      <div class="section-header" style="margin-bottom:12px">
-        <span class="section-title">Por categoría</span>
-      </div>
-      <div class="cats-scroll" id="cats-scroll"></div>
-      <div class="section-header" style="margin-top:20px">
-        <span class="section-title">Últimos tickets</span>
-        <button class="see-all" onclick="switchTab('tickets')">Ver todos</button>
-      </div>
-      <div id="home-tickets"></div>
-    </div>
+    <div id="home-header" class="app-header"></div>
+    <div class="scroll-area" id="home-content"></div>
     <div class="bottom-nav">
-      <button class="nav-item active" onclick="switchTab('home')" id="nav-home">
-        <span class="nav-icon">⊙</span><span class="nav-label">Inicio</span>
-      </button>
-      <button class="nav-item" onclick="switchTab('tickets')" id="nav-tickets">
-        <span class="nav-icon">📋</span><span class="nav-label">Tickets</span>
-      </button>
-      <div style="flex:1;position:relative">
-        <div class="nav-fab" onclick="openScanner()">
-          <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        </div>
-      </div>
-      <button class="nav-item" onclick="switchTab('stats')" id="nav-stats">
-        <span class="nav-icon">📊</span><span class="nav-label">Stats</span>
-      </button>
-      <button class="nav-item" onclick="switchTab('profile')" id="nav-profile">
-        <span class="nav-icon">👤</span><span class="nav-label">Perfil</span>
-      </button>
+      <button class="nav-item active" onclick="switchTab('home')"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
+      <button class="nav-item" onclick="switchTab('tickets')"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
+      <div class="nav-fab-wrap"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <button class="nav-item" onclick="switchTab('stats')"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
     </div>
   </div>
 
-  <!-- TICKETS SCREEN (tab, same nav) -->
+  <!-- TICKETS -->
   <div id="tickets-screen" class="screen hidden">
     <div class="screen-header">
       <div class="screen-title">Mis Tickets</div>
       <div class="filter-row" id="filter-row"></div>
     </div>
-    <div class="scroll-area" id="tickets-list"></div>
+    <div class="scroll-area" id="tickets-content"></div>
     <div class="bottom-nav">
-      <button class="nav-item" onclick="switchTab('home')" id="nav-home2"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
-      <button class="nav-item active" onclick="switchTab('tickets')" id="nav-tickets2"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
-      <div style="flex:1;position:relative"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
-      <button class="nav-item" onclick="switchTab('stats')" id="nav-stats2"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
-      <button class="nav-item" onclick="switchTab('profile')" id="nav-profile2"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
+      <button class="nav-item" onclick="switchTab('home')"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
+      <button class="nav-item active" onclick="switchTab('tickets')"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
+      <div class="nav-fab-wrap"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <button class="nav-item" onclick="switchTab('stats')"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+      <button class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
     </div>
   </div>
 
-  <!-- STATS SCREEN -->
+  <!-- STATS -->
   <div id="stats-screen" class="screen hidden">
-    <div class="screen-header">
-      <div class="screen-title">Estadísticas</div>
-    </div>
+    <div class="screen-header"><div class="screen-title">Estadísticas</div></div>
     <div class="scroll-area" id="stats-content"></div>
     <div class="bottom-nav">
       <button class="nav-item" onclick="switchTab('home')"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
       <button class="nav-item" onclick="switchTab('tickets')"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
-      <div style="flex:1;position:relative"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <div class="nav-fab-wrap"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
       <button class="nav-item active"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
       <button class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
     </div>
   </div>
 
-  <!-- PROFILE SCREEN -->
+  <!-- PROFILE -->
   <div id="profile-screen" class="screen hidden">
-    <div class="screen-header">
-      <div class="screen-title">Mi Perfil</div>
-    </div>
-    <div class="scroll-area">
-      <div style="text-align:center;padding:20px 0 28px">
-        <div id="profile-avatar" style="width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#fff;margin-bottom:12px"></div>
-        <div id="profile-name" style="font-size:20px;font-weight:600;color:var(--text)"></div>
-        <div id="profile-card-num" style="font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:4px"></div>
-      </div>
-      <div class="profile-section" id="profile-info"></div>
-      <div class="profile-section">
-        <div class="profile-row" style="cursor:pointer" onclick="logout()">
-          <span class="p-row-label" style="color:#E24B4A">Cerrar sesión</span>
-          <span>→</span>
-        </div>
-      </div>
-    </div>
+    <div class="screen-header"><div class="screen-title">Mi Perfil</div></div>
+    <div class="scroll-area" id="profile-content"></div>
     <div class="bottom-nav">
       <button class="nav-item" onclick="switchTab('home')"><span class="nav-icon">⊙</span><span class="nav-label">Inicio</span></button>
       <button class="nav-item" onclick="switchTab('tickets')"><span class="nav-icon">📋</span><span class="nav-label">Tickets</span></button>
-      <div style="flex:1;position:relative"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
+      <div class="nav-fab-wrap"><div class="nav-fab" onclick="openScanner()"><svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2M9 9h6M9 12h6M9 15h4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div></div>
       <button class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
       <button class="nav-item active"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>
     </div>
   </div>
 
-  <!-- CONFIRM DELETE MODAL -->
-  <div class="ticket-modal-bg hidden" id="confirm-delete-modal" style="align-items:center;justify-content:center;padding:24px">
-    <div style="background:var(--surface);border-radius:20px;width:100%;max-width:340px;overflow:hidden">
-      <div style="padding:24px 24px 0;text-align:center">
-        <div style="font-size:40px;margin-bottom:12px">🗑️</div>
-        <div style="font-size:17px;font-weight:600;color:var(--text)">¿Eliminar este ticket?</div>
-        <div style="font-size:14px;color:var(--text2);margin-top:8px;line-height:1.5">Esta acción no se puede deshacer. El ticket se eliminará de todas partes.</div>
-      </div>
-      <div style="display:flex;gap:10px;padding:20px 24px 24px">
-        <button onclick="cancelDelete()" style="flex:1;padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text)">Cancelar</button>
-        <button onclick="executeDelete()" style="flex:1;padding:13px;background:#E24B4A;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;color:#fff">Sí, eliminar</button>
-      </div>
+  <!-- SCANNER SHEET -->
+  <div class="sheet-overlay hidden" id="scanner-sheet">
+    <div class="sheet-content">
+      <div class="sheet-title">Añadir ticket</div>
+      <div class="sheet-sub">¿Cómo quieres subir el ticket?</div>
+      <button class="sheet-btn sheet-btn-primary" onclick="pickCamera()">
+        <span class="sheet-btn-icon">📷</span>
+        <div><div class="sheet-btn-label">Hacer foto ahora</div><div class="sheet-btn-desc">Abre la cámara directamente</div></div>
+      </button>
+      <button class="sheet-btn sheet-btn-secondary" onclick="pickGallery()">
+        <span class="sheet-btn-icon">🖼️</span>
+        <div><div class="sheet-btn-label" style="color:var(--text)">Subir de galería</div><div class="sheet-btn-desc">Elige una foto existente</div></div>
+      </button>
+      <button class="sheet-btn sheet-btn-cancel" onclick="closeScanner()">Cancelar</button>
     </div>
   </div>
 
-  <!-- SCANNER OVERLAY - simplified, no black camera preview -->
-  <div class="overlay hidden" id="scanner-overlay" style="background:rgba(0,0,0,0.85);justify-content:flex-end">
-    <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:24px 20px 40px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-        <div>
-          <div style="font-size:18px;font-weight:600;color:var(--text)">Añadir ticket</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:2px">¿Cómo quieres subir el ticket?</div>
-        </div>
-        <button class="tm-close" onclick="closeScanner()">✕</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <button class="btn-scan" onclick="triggerCameraCapture()" style="padding:18px;font-size:16px;border-radius:14px;display:flex;align-items:center;gap:12px">
-          <span style="font-size:28px">📷</span>
-          <div style="text-align:left">
-            <div style="font-weight:600">Hacer foto ahora</div>
-            <div style="font-size:12px;opacity:0.8;font-weight:400">Abre la cámara directamente</div>
-          </div>
-        </button>
-        <button onclick="triggerGallery()" style="padding:18px;font-size:16px;border-radius:14px;display:flex;align-items:center;gap:12px;background:var(--surface2);border:1.5px solid var(--border);cursor:pointer;font-family:DM Sans,sans-serif">
-          <span style="font-size:28px">🖼️</span>
-          <div style="text-align:left">
-            <div style="font-weight:600;color:var(--text)">Subir de galería</div>
-            <div style="font-size:12px;color:var(--text2);font-weight:400">Elige una foto existente</div>
-          </div>
-        </button>
-        <button class="btn-outline" onclick="closeScanner()" style="padding:14px;font-size:15px;border-radius:14px;color:var(--text2)">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PROCESSING OVERLAY -->
+  <!-- PROCESSING -->
   <div class="process-overlay hidden" id="process-overlay">
     <div class="spinner"></div>
-    <div class="process-title">Analizando ticket...</div>
-    <div class="process-sub">Claude Vision está leyendo</div>
-    <div class="process-steps">
-      <div class="p-step active" id="step-upload"><div class="p-step-dot"></div>Subiendo imagen</div>
-      <div class="p-step" id="step-ocr"><div class="p-step-dot"></div>Extrayendo texto (OCR)</div>
-      <div class="p-step" id="step-cat"><div class="p-step-dot"></div>Categorizando con IA</div>
-      <div class="p-step" id="step-iva"><div class="p-step-dot"></div>Calculando IVA deducible</div>
+    <div style="color:#fff;font-size:17px;font-weight:500">Analizando ticket...</div>
+    <div style="color:rgba(255,255,255,0.4);font-size:13px">Claude Vision está leyendo</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+      <div class="p-step active" id="step1"><div class="p-dot"></div>Subiendo imagen</div>
+      <div class="p-step" id="step2"><div class="p-dot"></div>Extrayendo texto</div>
+      <div class="p-step" id="step3"><div class="p-dot"></div>Categorizando con IA</div>
+      <div class="p-step" id="step4"><div class="p-dot"></div>Calculando importes</div>
     </div>
   </div>
 
@@ -420,90 +316,109 @@
   <div class="result-overlay hidden" id="result-overlay">
     <div class="result-header">
       <div class="result-title">Ticket detectado ✓</div>
-      <button class="overlay-close" onclick="discardResult()">✕</button>
+      <button style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:17px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="discardResult()">✕</button>
     </div>
-    <div class="result-scroll" id="result-scroll"></div>
+    <div class="result-scroll" id="result-content"></div>
     <div class="result-footer">
       <button class="btn-discard" onclick="discardResult()">Descartar</button>
-      <button class="btn-save" onclick="saveTicket()">Guardar ticket</button>
+      <button class="btn-save" id="btn-save-ticket" onclick="saveTicket()">💾 Guardar ticket</button>
     </div>
   </div>
 
-  <div class="error-toast" id="error-toast"></div>
-  <!-- TICKET DETAIL MODAL -->
-  <div class="ticket-modal-bg hidden" id="ticket-detail-modal">
-    <div class="ticket-modal">
-      <div class="tm-header">
-        <div class="tm-title" id="tm-title">Detalle del ticket</div>
-        <button class="tm-close" onclick="closeTicketModal()">✕</button>
+  <!-- TICKET DETAIL SHEET -->
+  <div class="detail-sheet-overlay hidden" id="detail-overlay">
+    <div class="detail-sheet" id="detail-sheet-inner">
+      <div class="detail-header">
+        <div class="detail-title" id="detail-title">Detalle</div>
+        <button class="detail-close" onclick="closeDetail()">✕</button>
       </div>
-      <div id="tm-content"></div>
+      <div id="detail-content"></div>
     </div>
   </div>
 
-  <input type="file" id="file-input-camera" accept="image/*" capture="environment" style="display:none">
-<input type="file" id="file-input-gallery" accept="image/*" style="display:none">
+  <!-- CONFIRM DELETE DIALOG -->
+  <div class="dialog-overlay hidden" id="delete-dialog">
+    <div class="dialog-box">
+      <div class="dialog-body">
+        <div class="dialog-icon">🗑️</div>
+        <div class="dialog-title">¿Eliminar este ticket?</div>
+        <div class="dialog-text">Esta acción no se puede deshacer. El ticket se eliminará de todas partes.</div>
+      </div>
+      <div class="dialog-buttons">
+        <button class="btn-cancel-dialog" onclick="cancelDelete()">Cancelar</button>
+        <button class="btn-confirm-delete" onclick="executeDelete()">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- FILE INPUTS -->
+  <input type="file" id="input-camera" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="input-gallery" accept="image/*" style="display:none">
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
+// ─── CONFIG ────────────────────────────────────────────
 const SUPABASE_URL = 'https://nkhshchyiczmflyvmqez.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_uHNalN6xCBwIIr1nAOMtaw_ixj0NHyR';
-const CLAUDE_API_KEY = '';
 
-// USERS - editar con los datos reales
 const USERS = [
   {id:'marcos', name:'Marcos Campelo', initials:'MC', color:'#6C63FF', limit:2000, card:'4521', brand:'VISA'},
   {id:'begona', name:'Begoña García',  initials:'BG', color:'#E91E8C', limit:1500, card:'7834', brand:'MC'},
   {id:'jacobo', name:'Jacobo Ruiz',    initials:'JC', color:'#00BCD4', limit:2000, card:'2291', brand:'VISA'},
 ];
 
-const CATEGORIES = {
-  restaurantes:{label:'Restaurantes', emoji:'🍽️', iva_deducible:50, iva_tipo:10, bg:'#EDE9FF', text:'#5B4ECC'},
-  gasolina:    {label:'Gasolina',     emoji:'⛽', iva_deducible:100,iva_tipo:21, bg:'#FFF3E0', text:'#E65C00'},
-  transporte:  {label:'Transporte',   emoji:'🚗', iva_deducible:100,iva_tipo:10, bg:'#E3F2FD', text:'#1565C0'},
-  moda:        {label:'Moda',         emoji:'👔', iva_deducible:100,iva_tipo:21, bg:'#F3E5F5', text:'#7B1FA2'},
-  textil:      {label:'Textil',       emoji:'🧵', iva_deducible:100,iva_tipo:21, bg:'#FCE4EC', text:'#C62828'},
-  supermercado:{label:'Supermercado', emoji:'🛒', iva_deducible:21, iva_tipo:4,  bg:'#E8F5E9', text:'#2E7D32'},
-  otros:       {label:'Otros',        emoji:'📄', iva_deducible:50, iva_tipo:21, bg:'#F1F1F1', text:'#555555'},
+const CATS = {
+  restaurantes:{label:'Restaurantes',emoji:'🍽️',bg:'#EDE9FF',text:'#5B4ECC'},
+  gasolina:    {label:'Gasolina',    emoji:'⛽',bg:'#FFF3E0',text:'#E65C00'},
+  transporte:  {label:'Transporte',  emoji:'🚗',bg:'#E3F2FD',text:'#1565C0'},
+  moda:        {label:'Moda',        emoji:'👔',bg:'#F3E5F5',text:'#7B1FA2'},
+  textil:      {label:'Textil',      emoji:'🧵',bg:'#FCE4EC',text:'#C62828'},
+  supermercado:{label:'Supermercado',emoji:'🛒',bg:'#E8F5E9',text:'#2E7D32'},
+  alojamiento: {label:'Alojamiento', emoji:'🏨',bg:'#E0F7FA',text:'#00695C'},
+  otros:       {label:'Otros',       emoji:'📄',bg:'#F1F1F1',text:'#555'},
 };
 
-// ── STATE ────────────────────────────────────────────────
+// ─── STATE ──────────────────────────────────────────────
 let currentUser = null;
 let tickets = JSON.parse(localStorage.getItem('tickets_v2') || '[]');
 let currentFilter = 'all';
 let pendingResult = null;
-let pendingImageUrl = null;
+let pendingDeleteRef = null;
 
-// ── INIT ─────────────────────────────────────────────────
-function init() {
+// ─── INIT ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
   renderUserList();
-  document.getElementById('file-input-camera').addEventListener('change', handleFile);
-  document.getElementById('ticket-detail-modal').addEventListener('click', e => {
-    if (e.target.id === 'ticket-detail-modal') closeTicketModal();
+  document.getElementById('input-camera').addEventListener('change', handleFile);
+  document.getElementById('input-gallery').addEventListener('change', handleFile);
+  // Close detail on background tap
+  document.getElementById('detail-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('detail-overlay')) closeDetail();
   });
-  document.getElementById('confirm-delete-modal').addEventListener('click', e => {
-    if (e.target.id === 'confirm-delete-modal') cancelDelete();
-  });
-  document.getElementById('file-input-gallery').addEventListener('change', handleFile);
-}
+  // Check auto-login
+  const last = localStorage.getItem('lastUser');
+  if (last) {
+    const u = USERS.find(u => u.id === last);
+    if (u) { currentUser = u; showScreen('home'); renderHome(); return; }
+  }
+  showScreen('login');
+});
 
+// ─── LOGIN ───────────────────────────────────────────────
 function renderUserList() {
-  const list = document.getElementById('user-list');
-  list.innerHTML = USERS.map(u => `
-    <div class="user-option" onclick="selectUser('${u.id}')" id="uopt-${u.id}">
+  document.getElementById('user-list').innerHTML = USERS.map(u => `
+    <div class="user-option" id="uopt-${u.id}" onclick="selectUser('${u.id}')">
       <div class="u-avatar" style="background:${u.color}">${u.initials}</div>
-      <div>
-        <div class="u-name">${u.name}</div>
-        <div class="u-card">···· ···· ···· ${u.card} · ${u.brand}</div>
-      </div>
+      <div><div class="u-name">${u.name}</div><div class="u-card-text">···· ···· ···· ${u.card} · ${u.brand}</div></div>
       <span class="u-check">✓</span>
     </div>`).join('');
 }
 
 function selectUser(id) {
   document.querySelectorAll('.user-option').forEach(el => el.classList.remove('selected'));
-  document.getElementById('uopt-'+id)?.classList.add('selected');
+  document.getElementById('uopt-' + id)?.classList.add('selected');
   currentUser = USERS.find(u => u.id === id);
   document.getElementById('login-btn').disabled = false;
 }
@@ -511,154 +426,158 @@ function selectUser(id) {
 function doLogin() {
   if (!currentUser) return;
   localStorage.setItem('lastUser', currentUser.id);
-  showHomeScreen();
+  showScreen('home');
+  renderHome();
 }
 
 function logout() {
   currentUser = null;
   localStorage.removeItem('lastUser');
-  showScreen('login-screen');
+  showScreen('login');
 }
 
-// ── SCREENS ───────────────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.add('hidden');
-    s.classList.remove('slide-left');
-  });
-  document.getElementById(id)?.classList.remove('hidden');
-}
-
-function showHomeScreen() {
-  showScreen('home-screen');
-  renderHome();
+// ─── SCREEN NAVIGATION ───────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(name + '-screen')?.classList.remove('hidden');
 }
 
 function switchTab(tab) {
-  const map = {home:'home-screen', tickets:'tickets-screen', stats:'stats-screen', profile:'profile-screen'};
-  showScreen(map[tab] || 'home-screen');
+  showScreen(tab);
   if (tab === 'home') renderHome();
-  if (tab === 'tickets') renderTicketsList();
+  if (tab === 'tickets') renderTickets();
   if (tab === 'stats') renderStats();
   if (tab === 'profile') renderProfile();
 }
 
-// ── HOME RENDER ──────────────────────────────────────────
+// ─── HOME ────────────────────────────────────────────────
 function renderHome() {
   const u = currentUser;
-  const myTickets = tickets.filter(t => t.userId === u.id);
-  const spent = myTickets.reduce((s,t) => s + (t.importe_total||0), 0);
+  const mine = tickets.filter(t => t.userId === u.id);
+  const spent = mine.reduce((s, t) => s + (t.importe_total || 0), 0);
   const avail = u.limit - spent;
-  const pct = Math.min(100, (spent/u.limit)*100);
+  const pct = Math.min(100, (spent / u.limit) * 100);
 
-  document.getElementById('home-username').textContent = u.name.split(' ')[0];
-  document.getElementById('home-spent').textContent = '€' + spent.toFixed(2);
-  document.getElementById('home-avail').textContent = '€' + avail.toFixed(2);
-  document.getElementById('home-prog').style.width = pct + '%';
-  document.getElementById('prog-pct').textContent = pct.toFixed(0) + '%';
-  document.getElementById('home-limit').textContent = 'Límite: €' + u.limit;
-  document.getElementById('home-card-chip').innerHTML = cardChipHtml(u);
+  // Header
+  const brandHtml = u.brand === 'VISA'
+    ? `<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px">VISA</span>`
+    : `<span style="font-size:10px;font-weight:700;color:#F79E1B">MC</span>`;
+
+  document.getElementById('home-header').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="header-greeting">Hola,</div><div class="header-name">${u.name.split(' ')[0]}</div></div>
+      <div class="card-chip" style="margin-top:4px">
+        <div style="width:22px;height:22px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${u.initials}</div>
+        ${brandHtml}
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace">···${u.card}</span>
+      </div>
+    </div>
+    <div class="balance-block">
+      <div class="bal-label">Gastado este mes</div>
+      <div class="bal-row">
+        <div class="bal-spent">€${spent.toFixed(2)}</div>
+        <div><div class="bal-avail-label">Disponible</div><div class="bal-avail-val">€${avail.toFixed(2)}</div></div>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div class="prog-labels"><span>${pct.toFixed(0)}%</span><span>Límite: €${u.limit}</span></div>
+    </div>`;
 
   // Category totals
   const catTotals = {};
-  myTickets.forEach(t => { catTotals[t.categoria] = (catTotals[t.categoria]||0) + (t.importe_total||0); });
-  const catsHtml = Object.entries(catTotals).map(([cat, total]) => {
-    const c = CATEGORIES[cat] || CATEGORIES.otros;
-    return `<div class="cat-chip">
-      <div class="cat-emoji">${c.emoji}</div>
-      <div class="cat-name">${c.label}</div>
-      <div class="cat-val">€${total.toFixed(0)}</div>
-    </div>`;
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin gastos aún</div>';
-  document.getElementById('cats-scroll').innerHTML = catsHtml;
+  mine.forEach(t => { catTotals[t.categoria] = (catTotals[t.categoria] || 0) + (t.importe_total || 0); });
+  const catsHtml = Object.entries(catTotals).length
+    ? `<div class="cats-scroll">${Object.entries(catTotals).map(([cat, total]) => {
+        const c = CATS[cat] || CATS.otros;
+        return `<div class="cat-chip"><div class="cat-chip-emoji">${c.emoji}</div><div class="cat-chip-name">${c.label}</div><div class="cat-chip-val">€${total.toFixed(0)}</div></div>`;
+      }).join('')}</div>`
+    : `<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin gastos aún</div>`;
 
   // Recent tickets
-  document.getElementById('home-tickets').innerHTML = myTickets.slice(-5).reverse().map(ticketRowHtml).join('') ||
-    '<div style="text-align:center;padding:32px;color:var(--text3)">Pulsa el botón escáner para añadir tu primer ticket</div>';
+  const recentHtml = mine.length
+    ? mine.slice(-5).reverse().map(ticketRowHtml).join('')
+    : `<div style="text-align:center;padding:32px 0;color:var(--text3)">Pulsa el escáner para añadir tu primer ticket</div>`;
+
+  document.getElementById('home-content').innerHTML = `
+    <div class="section-header" style="margin-bottom:12px"><span class="section-title">Por categoría</span></div>
+    ${catsHtml}
+    <div class="section-header" style="margin-top:20px">
+      <span class="section-title">Últimos tickets</span>
+      <button class="see-all" onclick="switchTab('tickets')">Ver todos</button>
+    </div>
+    ${recentHtml}`;
 }
 
-function cardChipHtml(u) {
-  const brandHtml = u.brand === 'VISA'
-    ? '<span style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:1px">VISA</span>'
-    : '<span style="font-size:10px;font-weight:700;background:linear-gradient(90deg,#EB001B,#F79E1B);-webkit-background-clip:text;-webkit-text-fill-color:transparent">MC</span>';
-  return `<div style="width:22px;height:22px;border-radius:50%;background:${u.color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${u.initials}</div>
-    ${brandHtml}
-    <span style="font-size:11px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace">···${u.card}</span>`;
-}
-
+// ─── TICKET ROW ───────────────────────────────────────────
 function ticketRowHtml(t) {
-  const c = CATEGORIES[t.categoria] || CATEGORIES.otros;
-  const imgHtml = t.imageDataUrl
-    ? `<img src="${t.imageDataUrl}" style="width:46px;height:46px;object-fit:cover;border-radius:10px">`
+  const c = CATS[t.categoria] || CATS.otros;
+  const thumb = t.imageDataUrl
+    ? `<img src="${t.imageDataUrl}" style="width:100%;height:100%;object-fit:cover">`
     : c.emoji;
-  return `<div class="ticket-card" onclick="openTicketDetail('${t.ref}')">
-    <div class="ticket-thumb">${imgHtml}</div>
+  return `<div class="ticket-card" onclick="openDetail('${t.ref}')">
+    <div class="ticket-thumb">${thumb}</div>
     <div class="ticket-info">
       <div class="ticket-name">${t.nombre || 'Sin nombre'}</div>
       <div class="ticket-sub">
-        <span class="badge" style="background:${c.bg};color:${c.text}">${c.label}</span>
-        <span style="color:var(--text3)">${t.fecha||''}</span>
+        <span class="badge" style="background:${c.bg};color:${c.text}">${c.emoji} ${c.label}</span>
+        <span>${t.fecha || ''}</span>
       </div>
     </div>
     <div class="ticket-right">
-      <div class="ticket-amount">€${(t.importe_total||0).toFixed(2)}</div>
+      <div class="ticket-amount">€${(t.importe_total || 0).toFixed(2)}</div>
       <div class="ticket-ref">${t.ref}</div>
     </div>
   </div>`;
 }
 
-// ── TICKETS LIST ─────────────────────────────────────────
-function renderTicketsList() {
-  const u = currentUser;
-  let myTickets = tickets.filter(t => t.userId === u.id);
-  if (currentFilter !== 'all') myTickets = myTickets.filter(t => t.categoria === currentFilter);
+// ─── TICKETS TAB ─────────────────────────────────────────
+function renderTickets() {
+  const mine = tickets.filter(t => t.userId === currentUser.id);
+  const allCats = [...new Set(mine.map(t => t.categoria))];
 
-  // Filters
-  const allCats = [...new Set(tickets.filter(t=>t.userId===u.id).map(t=>t.categoria))];
   document.getElementById('filter-row').innerHTML =
-    `<button class="filter-btn ${currentFilter==='all'?'active':''}" onclick="setFilter('all')">Todos</button>` +
+    `<button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">Todos</button>` +
     allCats.map(cat => {
-      const c = CATEGORIES[cat] || CATEGORIES.otros;
-      return `<button class="filter-btn ${currentFilter===cat?'active':''}" onclick="setFilter('${cat}')">${c.emoji} ${c.label}</button>`;
+      const c = CATS[cat] || CATS.otros;
+      return `<button class="filter-btn ${currentFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">${c.emoji} ${c.label}</button>`;
     }).join('');
 
-  document.getElementById('tickets-list').innerHTML = myTickets.reverse().map(ticketRowHtml).join('') ||
-    '<div style="text-align:center;padding:48px 20px;color:var(--text3)">No hay tickets en esta categoría</div>';
+  const filtered = currentFilter === 'all' ? mine : mine.filter(t => t.categoria === currentFilter);
+  document.getElementById('tickets-content').innerHTML = filtered.length
+    ? filtered.slice().reverse().map(ticketRowHtml).join('')
+    : `<div style="text-align:center;padding:48px 20px;color:var(--text3)">No hay tickets</div>`;
 }
 
 function setFilter(f) {
   currentFilter = f;
-  renderTicketsList();
+  renderTickets();
 }
 
-// ── STATS ────────────────────────────────────────────────
+// ─── STATS ───────────────────────────────────────────────
 function renderStats() {
-  const u = currentUser;
-  const myTickets = tickets.filter(t => t.userId === u.id);
-  const spent = myTickets.reduce((s,t) => s + (t.importe_total||0), 0);
-  const deducible = myTickets.reduce((s,t) => s + (t.iva_deducible_eur||0), 0);
-  const base = myTickets.reduce((s,t) => s + (t.base_imponible||0), 0);
+  const mine = tickets.filter(t => t.userId === currentUser.id);
+  const total = mine.reduce((s, t) => s + (t.importe_total || 0), 0);
+  const base = mine.reduce((s, t) => s + (t.base_imponible || 0), 0);
+  const iva = mine.reduce((s, t) => s + (t.iva_importe || 0), 0);
   const catTotals = {};
-  myTickets.forEach(t => { catTotals[t.categoria] = (catTotals[t.categoria]||0) + (t.importe_total||0); });
+  mine.forEach(t => { catTotals[t.categoria] = (catTotals[t.categoria] || 0) + (t.importe_total || 0); });
+  const maxCat = Math.max(...Object.values(catTotals), 1);
 
-  const barMax = Math.max(...Object.values(catTotals), 1);
-  const barsHtml = Object.entries(catTotals).map(([cat, total]) => {
-    const c = CATEGORIES[cat] || CATEGORIES.otros;
-    const w = Math.round((total/barMax)*100);
-    return `<div style="margin-bottom:12px">
+  const bars = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
+    const c = CATS[cat] || CATS.otros;
+    return `<div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
         <span>${c.emoji} ${c.label}</span>
-        <span style="font-family:'DM Mono',monospace;font-weight:500">€${total.toFixed(2)}</span>
+        <span style="font-family:'DM Mono',monospace;font-weight:500">€${amt.toFixed(2)}</span>
       </div>
-      <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
-        <div style="width:${w}%;height:6px;border-radius:4px;background:${c.bg};border:1px solid ${c.text}"></div>
+      <div style="background:var(--surface2);border-radius:4px;height:7px;overflow:hidden">
+        <div style="width:${(amt/maxCat*100).toFixed(0)}%;height:7px;border-radius:4px;background:${c.bg};border-left:3px solid ${c.text}"></div>
       </div>
     </div>`;
   }).join('');
 
   document.getElementById('stats-content').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-      ${[['Total gastado','€'+spent.toFixed(2),'#6C63FF'],['Base imponible','€'+base.toFixed(2),'#3EC6E0'],['IVA deducible','€'+deducible.toFixed(2),'#2E7D32'],['Nº tickets',''+myTickets.length,'#E65C00']].map(([l,v,col])=>`
+      ${[['Total gastado','€'+total.toFixed(2),'#6C63FF'],['Base imponible','€'+base.toFixed(2),'#3EC6E0'],['Total IVA','€'+iva.toFixed(2),'#E65C00'],['Nº tickets',''+mine.length,'#2E7D32']].map(([l,v,col])=>`
       <div style="background:var(--surface);border-radius:var(--radius);padding:14px;border:1px solid var(--border)">
         <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px">${l}</div>
         <div style="font-size:22px;font-weight:600;color:${col};font-family:'DM Mono',monospace;margin-top:4px">${v}</div>
@@ -666,71 +585,67 @@ function renderStats() {
     </div>
     <div style="background:var(--surface);border-radius:var(--radius);padding:16px;border:1px solid var(--border)">
       <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px">Por categoría</div>
-      ${barsHtml || '<div style="color:var(--text3);font-size:13px">Sin datos aún</div>'}
+      ${bars || '<div style="color:var(--text3);font-size:13px">Sin datos aún</div>'}
     </div>`;
 }
 
-// ── PROFILE ──────────────────────────────────────────────
+// ─── PROFILE ─────────────────────────────────────────────
 function renderProfile() {
   const u = currentUser;
-  const myTickets = tickets.filter(t => t.userId === u.id);
-  const spent = myTickets.reduce((s,t) => s + (t.importe_total||0), 0);
-  document.getElementById('profile-avatar').style.background = u.color;
-  document.getElementById('profile-avatar').textContent = u.initials;
-  document.getElementById('profile-name').textContent = u.name;
-  document.getElementById('profile-card-num').textContent = u.brand + ' ···· ···· ···· ' + u.card;
-  document.getElementById('profile-info').innerHTML = [
-    ['Límite mensual', '€' + u.limit],
-    ['Gastado', '€' + spent.toFixed(2)],
-    ['Disponible', '€' + (u.limit - spent).toFixed(2)],
-    ['Tickets subidos', myTickets.length],
-  ].map(([l,v]) => `<div class="profile-row"><span class="p-row-label">${l}</span><span class="p-row-val">${v}</span></div>`).join('');
+  const mine = tickets.filter(t => t.userId === u.id);
+  const spent = mine.reduce((s,t) => s+(t.importe_total||0), 0);
+  document.getElementById('profile-content').innerHTML = `
+    <div style="text-align:center;padding:24px 0 28px">
+      <div style="width:72px;height:72px;border-radius:50%;background:${u.color};display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#fff;margin-bottom:12px">${u.initials}</div>
+      <div style="font-size:20px;font-weight:600">${u.name}</div>
+      <div style="font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:4px">${u.brand} ···· ···· ···· ${u.card}</div>
+    </div>
+    <div class="profile-section">
+      ${[['Límite mensual','€'+u.limit],['Gastado este mes','€'+spent.toFixed(2)],['Disponible','€'+(u.limit-spent).toFixed(2)],['Tickets subidos',''+mine.length]].map(([l,v])=>`
+      <div class="profile-row"><span style="font-size:14px">${l}</span><span style="font-size:14px;font-family:'DM Mono',monospace;color:var(--text2)">${v}</span></div>`).join('')}
+    </div>
+    <div class="profile-section">
+      <div class="profile-row" style="cursor:pointer" onclick="logout()"><span style="font-size:14px;color:#E24B4A">Cerrar sesión</span><span>→</span></div>
+    </div>`;
 }
 
-// ── SCANNER ───────────────────────────────────────────────
+// ─── SCANNER ─────────────────────────────────────────────
 function openScanner() {
-  document.getElementById('scanner-overlay').classList.remove('hidden');
+  document.getElementById('scanner-sheet').classList.remove('hidden');
 }
 function closeScanner() {
-  document.getElementById('scanner-overlay').classList.add('hidden');
+  document.getElementById('scanner-sheet').classList.add('hidden');
 }
-function triggerCameraCapture() {
+function pickCamera() {
   closeScanner();
-  document.getElementById('file-input-camera').click();
+  document.getElementById('input-camera').click();
 }
-function triggerGallery() {
+function pickGallery() {
   closeScanner();
-  document.getElementById('file-input-gallery').click();
-}
-function triggerCamera() {
-  closeScanner();
-  document.getElementById('file-input-camera').click();
+  document.getElementById('input-gallery').click();
 }
 
-// ── FILE / AI PROCESSING ──────────────────────────────────
+// ─── FILE HANDLING ────────────────────────────────────────
 async function handleFile(e) {
   const file = e.target.files[0];
   if (!file) return;
-  e.target.value = ''; // reset so same file can be selected again
-  closeScanner();
+  e.target.value = '';
 
-  const imageDataUrl = await fileToDataUrl(file);
-  const b64 = imageDataUrl.split(',')[1];
+  const dataUrl = await fileToDataUrl(file);
+  const b64 = dataUrl.split(',')[1];
 
-  // Show processing
   showProcessing(true);
   animateSteps();
 
   try {
     const result = await callClaude(b64, file.type);
-    result.imageDataUrl = imageDataUrl;
+    result._imageDataUrl = dataUrl;
     pendingResult = result;
     showProcessing(false);
-    showResult(result);
+    showResultOverlay(result);
   } catch (err) {
     showProcessing(false);
-    showError('Error: ' + err.message);
-    console.error('FULL ERROR:', JSON.stringify(err), err.stack);
+    showToast('Error: ' + err.message, '#E24B4A');
   }
 }
 
@@ -749,44 +664,19 @@ async function callClaude(b64, mimeType) {
 REGLA FUNDAMENTAL: Lee la descripción de los artículos/servicios del ticket para categorizar. El mismo comercio puede tener categorías distintas según lo que se compre. Ejemplo: "Naturwash" puede ser lavandería de ropa (→ moda) O lavado de coche (→ transporte) — solo el contenido del ticket lo determina.
 
 Responde ÚNICAMENTE con JSON válido sin markdown ni texto extra:
-{"nombre":"nombre exacto del comercio","concepto":"descripción del producto/servicio en 5 palabras","fecha":"DD/MM/YYYY o vacío","importe_total":número,"base_imponible":número,"iva_porcentaje":número,"iva_importe":número,"categoria":"categoría según reglas","iva_deducible_pct":número,"razonamiento":"qué dice el ticket que justifica esta categoría"}
+{"nombre":"nombre exacto del comercio","concepto":"descripción del producto/servicio en 5 palabras","fecha":"DD/MM/YYYY o vacío","importe_total":número,"base_imponible":número,"iva_porcentaje":número,"iva_importe":número,"categoria":"categoría según reglas","razonamiento":"qué dice el ticket que justifica esta categoría"}
 
-═══ CATEGORÍAS — BASADAS EN EL SERVICIO/PRODUCTO, NO EN EL NOMBRE DEL COMERCIO ═══
+CATEGORÍAS — BASADAS EN EL SERVICIO/PRODUCTO, NO EN EL NOMBRE DEL COMERCIO:
+- restaurantes: ticket describe comida, bebida, menús, tapas, cafés, servicio de restauración, delivery de comida
+- gasolina: ticket describe combustible (gasolina 95/98, diésel, gasóleo), carga eléctrica de vehículo
+- transporte: ticket describe desplazamiento de personas (taxi, Uber, bus, tren, metro), parking, peaje, alquiler de vehículo, lavado o limpieza de coche/vehículo, ITV, mantenimiento de vehículo
+- moda: ticket describe prendas de ropa acabada, calzado, accesorios personales, lavado o planchado de ROPA (camisas, trajes, prendas)
+- textil: ticket describe telas por metros, tejidos en bruto, pasamanería, materiales para fabricación textil
+- supermercado: ticket describe alimentación, productos del hogar, limpieza doméstica, productos frescos
+- alojamiento: ticket describe estancia en hotel, habitación, noche de alojamiento, apartamento turístico
+- otros: ticket describe algo que genuinamente no encaja en ninguna categoría anterior
 
-🍽️ restaurantes → el ticket describe comida, bebida, menús, tapas, cafés, desayunos, almuerzos, cenas, servicio de restauración, delivery de comida.
-
-⛽ gasolina → el ticket describe combustible (gasolina 95/98, diésel, gasóleo), carga eléctrica de vehículo, AdBlue.
-
-🚗 transporte → el ticket describe: desplazamiento de personas (taxi, Uber, bus, tren, metro, AVE), parking, peaje, alquiler de vehículo, lavado o limpieza de coche/vehículo, ITV, mantenimiento de vehículo.
-
-👔 moda → el ticket describe: prendas de ropa acabada, calzado, accesorios personales (bolsos, cinturones, corbatas), lavado o planchado de ROPA (camisas, trajes, prendas).
-
-🧵 textil → el ticket describe: telas por metros, tejidos en bruto, pasamanería, mercería, botones/cremalleras industriales, materiales para fabricación textil.
-
-🛒 supermercado → el ticket describe: alimentación, productos del hogar, limpieza doméstica, productos frescos, bebidas, conservas.
-
-🏨 alojamiento → el ticket describe: estancia en hotel, habitación, noche de alojamiento, apartamento turístico, check-in/check-out.
-
-📄 otros → el ticket describe algo que genuinamente no encaja en ninguna categoría anterior: material de oficina, servicios profesionales, software, publicidad, farmacia, electrónica, formación, etc.
-
-═══ IVA DEDUCIBLE EN ESPAÑA ═══
-- gasolina: 100%
-- transporte (incluye lavado de coche): 100%
-- textil: 100%
-- moda (incluye lavandería de ropa): 100%
-- alojamiento: 100%
-- restaurantes: 50%
-- supermercado: 21%
-- otros: 50%
-
-ACLARACIÓN SOBRE IVA DEDUCIBLE:
-- iva_deducible_pct es el PORCENTAJE DEL IVA SOPORTADO que la empresa puede deducir fiscalmente
-- Ejemplo: ticket restaurante €100 + IVA 10% = €10 IVA. Deducible 50% = €5 deducibles
-- Ejemplo: ticket gasolina €100 + IVA 21% = €21 IVA. Deducible 100% = €21 deducibles
-- Esto NO es el porcentaje del total, sino del IVA específicamente
-- Para cosméticos/farmacia/productos personales → categoría "otros", deducible 50% porque no es gasto empresarial 100% justificado
-
-REGLA FINAL: Si el ticket es ambiguo, indica en "razonamiento" exactamente qué texto del ticket te llevó a esa categoría.`;
+REGLA FINAL: Si el ticket es ambiguo, indica en razonamiento exactamente qué texto del ticket te llevó a esa categoría.`;
 
   const resp = await fetch('/.netlify/functions/claude', {
     method: 'POST',
@@ -797,76 +687,75 @@ REGLA FINAL: Si el ticket es ambiguo, indica en "razonamiento" exactamente qué 
       messages: [{
         role: 'user',
         content: [
-          {type:'image', source:{type:'base64', media_type:mimeType, data:b64}},
-          {type:'text', text:prompt}
+          {type: 'image', source: {type: 'base64', media_type: mimeType, data: b64}},
+          {type: 'text', text: prompt}
         ]
       }]
     })
   });
 
   const respText = await resp.text();
-  if (!resp.ok) throw new Error('HTTP ' + resp.status + ': ' + respText.substring(0,300));
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
   const data = JSON.parse(respText);
-  if (data.error) throw new Error('API: ' + JSON.stringify(data.error));
+  if (data.error) throw new Error(JSON.stringify(data.error));
   const text = data.content?.find(b => b.type === 'text')?.text || '{}';
-  const clean = text.replace(/```json|```/g,'').trim();
+  const clean = text.replace(/```json|```/g, '').trim();
   const m = clean.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error('Sin JSON: ' + text.substring(0,100));
+  if (!m) throw new Error('Sin respuesta de IA');
   return JSON.parse(m[0]);
 }
 
-let stepTimeout = null;
+let stepTimer = null;
 function animateSteps() {
-  const steps = ['step-upload','step-ocr','step-cat','step-iva'];
-  steps.forEach(s => { document.getElementById(s)?.classList.remove('active','done'); });
-  document.getElementById(steps[0])?.classList.add('active');
+  const steps = ['step1','step2','step3','step4'];
+  steps.forEach(s => { const el = document.getElementById(s); if(el){el.classList.remove('active','done');} });
+  document.getElementById('step1')?.classList.add('active');
   let i = 0;
   function next() {
+    document.getElementById(steps[i])?.classList.remove('active');
+    document.getElementById(steps[i])?.classList.add('done');
+    i++;
     if (i < steps.length) {
-      document.getElementById(steps[i])?.classList.remove('active');
-      document.getElementById(steps[i])?.classList.add('done');
-      i++;
-      if (i < steps.length) {
-        document.getElementById(steps[i])?.classList.add('active');
-        stepTimeout = setTimeout(next, 900);
-      }
+      document.getElementById(steps[i])?.classList.add('active');
+      stepTimer = setTimeout(next, 800);
     }
   }
-  stepTimeout = setTimeout(next, 700);
+  stepTimer = setTimeout(next, 700);
 }
 
 function showProcessing(show) {
   document.getElementById('process-overlay').classList.toggle('hidden', !show);
-  if (!show && stepTimeout) clearTimeout(stepTimeout);
+  if (!show && stepTimer) clearTimeout(stepTimer);
 }
 
-function showResult(r) {
-  const c = CATEGORIES[r.categoria] || CATEGORIES.otros;
-  // iva deducible removed - not shown to user
+function showResultOverlay(r) {
+  const c = CATS[r.categoria] || CATS.otros;
+  const fields = [
+    ['Establecimiento', r.nombre || '—'],
+    ['Concepto', r.concepto || '—'],
+    ['Categoría', `<span class="badge" style="background:${c.bg};color:${c.text}">${c.emoji} ${c.label}</span>`],
+    ['Fecha', r.fecha || '—'],
+    ['Base imponible', '€' + (r.base_imponible||0).toFixed(2)],
+    ['IVA (' + (r.iva_porcentaje||0) + '%)', '€' + (r.iva_importe||0).toFixed(2)],
+    ['Total', `<span class="r-value big">€${(r.importe_total||0).toFixed(2)}</span>`],
+  ];
 
-  const html = `
-    ${r.imageDataUrl ? `<div class="ticket-preview"><img class="ticket-preview-img" src="${r.imageDataUrl}" alt="ticket"></div>` : ''}
+  document.getElementById('result-content').innerHTML = `
+    ${r._imageDataUrl ? `<img class="ticket-preview-img" src="${r._imageDataUrl}" alt="ticket">` : ''}
     <div class="result-card">
-      ${rows([
-        ['Establecimiento', r.nombre || '—'],
-        ['Concepto', r.concepto || '—'],
-        ['Categoría', `<span class="badge" style="background:${c.bg};color:${c.text}">${c.emoji} ${c.label}</span>`],
-        ['Fecha', r.fecha || '—'],
-        ['Base imponible', '€' + (r.base_imponible||0).toFixed(2)],
-        ['IVA ('+( r.iva_porcentaje||21)+'%)', '€' + (r.iva_importe||0).toFixed(2)],
-        ['Total', `<span class="r-value big">€${(r.importe_total||0).toFixed(2)}</span>`],
-      ])}
+      ${fields.map(([l,v]) => `<div class="result-row"><span class="r-label">${l}</span><span class="r-value">${v}</span></div>`).join('')}
     </div>
-    <div class="iva-info">
-      <div class="iva-row"><span class="iva-key">Motivo IA</span><span class="iva-val" style="font-size:11px;text-align:right;max-width:65%;line-height:1.4">${r.razonamiento||'—'}</span></div>
-    </div>`;
+    ${r.razonamiento ? `<div class="result-reason">
+      <div class="result-reason-label">🤖 Motivo IA</div>
+      <div class="result-reason-text">${r.razonamiento}</div>
+    </div>` : ''}`;
 
-  document.getElementById('result-scroll').innerHTML = html;
+  // Reset save button
+  const btn = document.getElementById('btn-save-ticket');
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar ticket';
+
   document.getElementById('result-overlay').classList.remove('hidden');
-}
-
-function rows(pairs) {
-  return pairs.map(([l,v]) => `<div class="result-row"><span class="r-label">${l}</span><span class="r-value">${v}</span></div>`).join('');
 }
 
 function discardResult() {
@@ -876,10 +765,14 @@ function discardResult() {
 
 function saveTicket() {
   if (!pendingResult) return;
+
+  // Disable button immediately to prevent double tap
+  const btn = document.getElementById('btn-save-ticket');
+  btn.disabled = true;
+  btn.textContent = '✓ Guardando...';
+
   const r = pendingResult;
   pendingResult = null;
-
-  if (navigator.vibrate) navigator.vibrate(50);
 
   const ref = 'T' + Date.now().toString(36).toUpperCase();
   const ticket = {
@@ -893,182 +786,134 @@ function saveTicket() {
     base_imponible: r.base_imponible || 0,
     iva_porcentaje: r.iva_porcentaje || 21,
     iva_importe: r.iva_importe || 0,
-    iva_deducible_pct: r.iva_deducible_pct || 0,
-    iva_deducible_eur: (r.iva_importe || 0) * (r.iva_deducible_pct || 0) / 100,
+    iva_deducible_pct: 0,
+    iva_deducible_eur: 0,
     categoria: r.categoria || 'otros',
     razonamiento: r.razonamiento || '',
-    imageDataUrl: r.imageDataUrl || null,
+    imageDataUrl: r._imageDataUrl || null,
     createdAt: new Date().toISOString(),
   };
 
   tickets.push(ticket);
   localStorage.setItem('tickets_v2', JSON.stringify(tickets));
-  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') saveToSupabase(ticket);
+  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') syncToSupabase(ticket);
+
+  if (navigator.vibrate) navigator.vibrate(60);
 
   document.getElementById('result-overlay').classList.add('hidden');
   renderHome();
   showToast('✓ Ticket guardado · ' + ref, '#2E7D32');
-}
-
-
-function discardResult() {
-  pendingResult = null;
-  document.getElementById('result-overlay').classList.add('hidden');
-}
-
-function saveTicket() {
-  if (!pendingResult) return;
-  // Prevent double tap
-  const btn = document.querySelector('.btn-save');
-  if (btn) { btn.disabled = true; btn.classList.add('btn-pulse'); }
-  if (navigator.vibrate) navigator.vibrate(50);
-  const r = pendingResult;
-  const ref = 'T' + Date.now().toString(36).toUpperCase();
-  // iva deducible removed - not shown to user
-
-  const ticket = {
-    ref, userId: currentUser.id, userName: currentUser.name,
-    nombre: r.nombre, concepto: r.concepto, fecha: r.fecha || today(),
-    importe_total: r.importe_total || 0,
-    base_imponible: r.base_imponible || 0,
-    iva_porcentaje: r.iva_porcentaje || 21,
-    iva_importe: r.iva_importe || 0,
-    iva_deducible_pct: r.iva_deducible_pct || 0,
-    iva_deducible_eur: ivaDeducEur,
-    categoria: r.categoria || 'otros',
-    razonamiento: r.razonamiento || '',
-    imageDataUrl: r.imageDataUrl || null,
-    createdAt: new Date().toISOString(),
-  };
-
-  tickets.push(ticket);
-  localStorage.setItem('tickets_v2', JSON.stringify(tickets));
-
-  // Send to Supabase if configured
-  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') saveToSupabase(ticket);
-
-  pendingResult = null;
-  document.getElementById('result-overlay').classList.add('hidden');
-  renderHome();
-  showToast('✓ Ticket guardado · ' + ref, '#2E7D32');
-  if (btn) setTimeout(() => { btn.disabled = false; }, 500);
 }
 
 function today() {
   const d = new Date();
-  return d.getDate().toString().padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  return d.getDate().toString().padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }
 
-// ── TICKET DETAIL MODAL ──────────────────────────────────────
-function openTicketDetail(ref) {
+// ─── TICKET DETAIL ────────────────────────────────────────
+function openDetail(ref) {
   const t = tickets.find(t => t.ref === ref);
   if (!t) return;
-  const c = CATEGORIES[t.categoria] || CATEGORIES.otros;
-  const ivaDeducEur = (t.iva_deducible_eur || 0).toFixed(2);
-  const catOptions = Object.entries(CATEGORIES).map(([k,v]) =>
-    `<option value="${k}" ${t.categoria===k?'selected':''}>${v.emoji} ${v.label}</option>`
+  const c = CATS[t.categoria] || CATS.otros;
+
+  const catOptions = Object.entries(CATS).map(([k,v]) =>
+    `<option value="${k}" ${t.categoria === k ? 'selected' : ''}>${v.emoji} ${v.label}</option>`
   ).join('');
 
-  document.getElementById('tm-title').textContent = t.nombre || 'Ticket';
-  document.getElementById('tm-content').innerHTML = `
-    ${t.imageDataUrl ? `<img class="tm-img" src="${t.imageDataUrl}" alt="ticket">` : ''}
-    <div class="tm-body">
+  document.getElementById('detail-title').textContent = t.nombre || 'Ticket';
+  document.getElementById('detail-content').innerHTML = `
+    ${t.imageDataUrl ? `<img class="detail-img" src="${t.imageDataUrl}" alt="ticket">` : ''}
+    <div class="detail-body">
       ${[
-        ['Referencia', t.ref, 'mono accent'],
+        ['Referencia', t.ref, 'mono'],
         ['Establecimiento', t.nombre || '—', ''],
         ['Concepto', t.concepto || '—', ''],
         ['Fecha', t.fecha || '—', ''],
         ['Base imponible', '€' + (t.base_imponible||0).toFixed(2), 'mono'],
         ['IVA (' + (t.iva_porcentaje||0) + '%)', '€' + (t.iva_importe||0).toFixed(2), 'mono'],
-        ['Total pagado', '€' + (t.importe_total||0).toFixed(2), 'mono'],
+        ['Total', '€' + (t.importe_total||0).toFixed(2), 'mono'],
+      ].map(([l,v,cls]) => `<div class="detail-field"><span class="df-label">${l}</span><span class="df-value ${cls}">${v}</span></div>`).join('')}
 
-      ].map(([l,v,cls]) => `<div class="tm-field"><span class="tm-label">${l}</span><span class="tm-value ${cls}">${v}</span></div>`).join('')}
-
-      ${t.razonamiento ? `<div class="tm-reason">
-        <div class="tm-reason-label">🤖 Motivo de categorización</div>
-        <div class="tm-reason-text">${t.razonamiento}</div>
+      ${t.razonamiento ? `<div class="detail-reason">
+        <div class="detail-reason-label">🤖 Motivo de categorización</div>
+        <div class="detail-reason-text">${t.razonamiento}</div>
       </div>` : ''}
 
       <div style="margin-top:16px">
-        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Cambiar categoría</div>
-        <div style="position:relative">
-          <select class="tm-cat-select" id="cat-select-${t.ref}">${catOptions}</select>
-        </div>
-        <button class="tm-save-cat" onclick="saveCategory('${t.ref}')">Guardar categoría</button>
-      </div>
-
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <button onclick="confirmDeleteTicket('${t.ref}')" style="width:100%;padding:12px;background:none;border:1.5px solid #E24B4A;color:#E24B4A;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px">
-          🗑️ Eliminar este ticket
-        </button>
-      </div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Cambiar categoría</div>
+        <select class="cat-select" id="cat-sel-${t.ref}">${catOptions}</select>
+        <button class="btn-save-cat" id="btn-cat-${t.ref}" onclick="saveCategory('${t.ref}')">Guardar categoría</button>
+        <button class="btn-delete" onclick="confirmDelete('${t.ref}')">🗑️ Eliminar este ticket</button>
       </div>
     </div>`;
 
-  document.getElementById('ticket-detail-modal').classList.remove('hidden');
+  document.getElementById('detail-overlay').classList.remove('hidden');
 }
 
-function closeTicketModal() {
-  document.getElementById('ticket-detail-modal').classList.add('hidden');
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.add('hidden');
 }
 
 function saveCategory(ref) {
-  const select = document.getElementById('cat-select-' + ref);
-  if (!select) return;
-  const btn = document.querySelector('.tm-save-cat');
-  if (btn) { btn.disabled = true; btn.textContent = '✓ Guardado'; }
-  if (navigator.vibrate) navigator.vibrate(60);
-  const newCat = select.value;
+  const sel = document.getElementById('cat-sel-' + ref);
+  const btn = document.getElementById('btn-cat-' + ref);
+  if (!sel || !btn) return;
+
+  btn.disabled = true;
+  btn.textContent = '✓ Categoría guardada';
+  if (navigator.vibrate) navigator.vibrate(50);
+
+  const newCat = sel.value;
   const idx = tickets.findIndex(t => t.ref === ref);
-  if (idx === -1) return;
-  tickets[idx].categoria = newCat;
-  const cat = CATEGORIES[newCat] || CATEGORIES.otros;
-  tickets[idx].iva_deducible_pct = cat.iva_deducible;
-  tickets[idx].iva_deducible_eur = (tickets[idx].iva_importe || 0) * cat.iva_deducible / 100;
-  localStorage.setItem('tickets_v2', JSON.stringify(tickets));
+  if (idx !== -1) {
+    tickets[idx].categoria = newCat;
+    localStorage.setItem('tickets_v2', JSON.stringify(tickets));
+  }
+
   setTimeout(() => {
-    closeTicketModal();
-    const activeScreen = document.querySelector('.screen:not(.hidden)');
-    if (activeScreen?.id === 'home-screen') renderHome();
-    if (activeScreen?.id === 'tickets-screen') renderTicketsList();
-    if (activeScreen?.id === 'stats-screen') renderStats();
-    showToast('✓ Categoría cambiada a ' + (CATEGORIES[newCat]?.label || newCat), '#2E7D32');
-  }, 300);
+    closeDetail();
+    renderCurrentTab();
+    showToast('✓ Categoría cambiada a ' + (CATS[newCat]?.label || newCat), '#2E7D32');
+  }, 400);
 }
 
-// ── DELETE TICKET ────────────────────────────────────────────
-let pendingDeleteRef = null;
-
-function confirmDeleteTicket(ref) {
+// ─── DELETE ───────────────────────────────────────────────
+function confirmDelete(ref) {
   pendingDeleteRef = ref;
-  document.getElementById('confirm-delete-modal').classList.remove('hidden');
+  document.getElementById('delete-dialog').classList.remove('hidden');
 }
 
 function cancelDelete() {
   pendingDeleteRef = null;
-  document.getElementById('confirm-delete-modal').classList.add('hidden');
+  document.getElementById('delete-dialog').classList.add('hidden');
 }
 
 function executeDelete() {
   if (!pendingDeleteRef) return;
-  if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+  if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
   tickets = tickets.filter(t => t.ref !== pendingDeleteRef);
   localStorage.setItem('tickets_v2', JSON.stringify(tickets));
   pendingDeleteRef = null;
-  document.getElementById('confirm-delete-modal').classList.add('hidden');
-  closeTicketModal();
-  const activeScreen = document.querySelector('.screen:not(.hidden)');
-  if (activeScreen?.id === 'home-screen') renderHome();
-  if (activeScreen?.id === 'tickets-screen') renderTicketsList();
-  if (activeScreen?.id === 'stats-screen') renderStats();
+  document.getElementById('delete-dialog').classList.add('hidden');
+  closeDetail();
+  renderCurrentTab();
   showToast('Ticket eliminado', '#E24B4A');
 }
 
-// ── SUPABASE SYNC ─────────────────────────────────────────
-async function saveToSupabase(ticket) {
+function renderCurrentTab() {
+  const active = document.querySelector('.screen:not(.hidden)');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'home-screen') renderHome();
+  if (id === 'tickets-screen') renderTickets();
+  if (id === 'stats-screen') renderStats();
+}
+
+// ─── SUPABASE SYNC ────────────────────────────────────────
+async function syncToSupabase(ticket) {
   try {
     const body = {...ticket};
-    delete body.imageDataUrl; // store separately if needed
+    delete body.imageDataUrl;
     await fetch(SUPABASE_URL + '/rest/v1/tickets', {
       method: 'POST',
       headers: {
@@ -1079,33 +924,19 @@ async function saveToSupabase(ticket) {
       },
       body: JSON.stringify(body)
     });
-  } catch(e) { console.warn('Supabase sync failed:', e); }
+  } catch(e) { console.warn('Supabase sync:', e); }
 }
 
-// ── ERROR / TOAST ─────────────────────────────────────────
-function showError(msg) {
-  showToast(msg, '#C62828');
-}
+// ─── TOAST ────────────────────────────────────────────────
+let toastTimer = null;
 function showToast(msg, color) {
-  const t = document.getElementById('error-toast');
+  const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.background = color || '#C62828';
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 3500);
+  t.style.background = color || '#2E7D32';
+  t.className = 'toast show';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
 }
-
-// ── AUTO-LOGIN ────────────────────────────────────────────
-function checkAutoLogin() {
-  const lastId = localStorage.getItem('lastUser');
-  if (lastId) {
-    const u = USERS.find(u => u.id === lastId);
-    if (u) { currentUser = u; showHomeScreen(); return; }
-  }
-  showScreen('login-screen');
-}
-
-init();
-checkAutoLogin();
 </script>
 </body>
 </html>
