@@ -802,7 +802,7 @@ function renderHome() {
   // Recent tickets
   const recentHtml = mine.length
     ? mine.slice().reverse().slice(0, 5).map(t => tRowHome(t)).join('')
-    : `<div class="empty"><div class="empty-icon">🧾</div><div class="empty-txt">Pulsa el botón + para añadir tu primer ticket</div></div>`;
+    : `<div class="empty"><div class="empty-txt">Pulsa el botón + para añadir tu primer ticket</div></div>`;
 
   const spentStr = spent.toFixed(2);
   const spentInt = spentStr.split('.')[0];
@@ -909,7 +909,7 @@ function renderTickets() {
 
   if (!list.length) {
     document.getElementById('tickets-body').innerHTML =
-      `<div class="empty"><div class="empty-icon">${q ? '🔍' : '🧾'}</div><div class="empty-txt">${q ? 'Sin resultados para "' + q + '"' : 'No hay tickets'}</div></div>`;
+      `<div class="empty"><div class="empty-txt">${q ? 'Sin resultados para "' + q + '"' : 'No hay tickets'}</div></div>`;
     return;
   }
 
