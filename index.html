@@ -855,7 +855,7 @@ function renderHome() {
     return `<div class="cat-row">
       <div class="cat-dot" style="background:${c.color}"></div>
       <div class="cat-row-name">${c.label}</div>
-      <div class="cat-row-pct">${spent > 0 ? (amt/spent*100).toFixed(0) : 0}%</div>
+      <div class="cat-row-pct">${spent > 0 ? (amt/spent*100).toFixed(1) : 0}%</div>
       <div class="cat-row-amt">€${amt.toFixed(2)}</div>
     </div>`;
   }).join('');
@@ -888,7 +888,7 @@ function renderHome() {
       </div>
       <div class="bal-progress">${segs}</div>
       <div class="bal-prog-labels">
-        <span>${pct.toFixed(0)}% USADO</span>
+        <span>${pct.toFixed(1)}% USADO</span>
         <span>QUEDAN €${avail.toFixed(2)}</span>
       </div>
     </div>`;
@@ -896,8 +896,8 @@ function renderHome() {
   document.getElementById('home-body').innerHTML = `
     <div class="quick-stats">
       <div class="qs-card"><div class="qs-lbl">TICKETS</div><div class="qs-val">${mine.length}</div></div>
-      <div class="qs-card"><div class="qs-lbl">IVA</div><div class="qs-val">€${ivaTotal.toFixed(0)}</div></div>
-      <div class="qs-card"><div class="qs-lbl">MEDIA</div><div class="qs-val">€${avgTicket.toFixed(0)}</div></div>
+      <div class="qs-card"><div class="qs-lbl">IVA</div><div class="qs-val">€${ivaTotal.toFixed(2)}</div></div>
+      <div class="qs-card"><div class="qs-lbl">MEDIA</div><div class="qs-val">€${avgTicket.toFixed(2)}</div></div>
     </div>
 
     ${sortedCats.length ? `<div style="padding:14px 20px 0">
@@ -1049,7 +1049,7 @@ function renderStats() {
           <span style="font-size:13px;font-weight:600;color:var(--fg)">${c.label}</span>
         </div>
         <div style="display:flex;align-items:baseline;gap:8px">
-          <span style="font-family:var(--mono);font-size:10px;color:var(--sub)">${total > 0 ? (amt/total*100).toFixed(0) : 0}%</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--sub)">${total > 0 ? (amt/total*100).toFixed(1) : 0}%</span>
           <span style="font-size:14px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">€${amt.toFixed(2)}</span>
         </div>
       </div>
@@ -1082,9 +1082,9 @@ function renderStats() {
     </div>
 
     <div class="stat-kpis">
-      <div class="skpi"><div class="skpi-lbl">IVA</div><div class="skpi-val">€${iva.toFixed(0)}</div></div>
+      <div class="skpi"><div class="skpi-lbl">IVA</div><div class="skpi-val">€${iva.toFixed(2)}</div></div>
       <div class="skpi"><div class="skpi-lbl">TICKETS</div><div class="skpi-val">${mine.length}</div></div>
-      <div class="skpi"><div class="skpi-lbl">MEDIA</div><div class="skpi-val">€${avg.toFixed(0)}</div></div>
+      <div class="skpi"><div class="skpi-lbl">MEDIA</div><div class="skpi-val">€${avg.toFixed(2)}</div></div>
     </div>
 
     ${sortedCats.length ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">
@@ -1127,8 +1127,8 @@ function renderProfile() {
 
     <div class="quick-stats" style="margin:0 0 12px">
       <div class="qs-card"><div class="qs-lbl">LÍMITE</div><div class="qs-val">€${CU.limit}</div></div>
-      <div class="qs-card"><div class="qs-lbl">GASTADO</div><div class="qs-val">€${spent.toFixed(0)}</div></div>
-      <div class="qs-card"><div class="qs-lbl">LIBRE</div><div class="qs-val" style="color:#5C4EE5">€${(CU.limit-spent).toFixed(0)}</div></div>
+      <div class="qs-card"><div class="qs-lbl">GASTADO</div><div class="qs-val">€${spent.toFixed(2)}</div></div>
+      <div class="qs-card"><div class="qs-lbl">LIBRE</div><div class="qs-val" style="color:#5C4EE5">€${(CU.limit-spent).toFixed(2)}</div></div>
     </div>
 
     <div class="psec">
