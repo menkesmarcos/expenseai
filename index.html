@@ -822,14 +822,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target === document.getElementById('det-bg')) closeDetail();
   });
 
-  // Splash ALWAYS white — override everything
+  // Splash always white
   document.getElementById('theme-color-meta').setAttribute('content', '#ffffff');
-  document.documentElement.style.background = '#ffffff';
-  document.body.style.background = '#ffffff';
-  // Apply dark class to body silently (no status bar change yet)
+  // Apply dark theme silently (no status bar change until Acceder is pressed)
   if (localStorage.getItem('menkex_theme') === 'dark') {
     document.body.classList.add('dark');
-    document.body.style.background = '#ffffff'; // override dark bg for splash
   }
 
   // Always show splash
@@ -841,6 +838,10 @@ window.addEventListener('DOMContentLoaded', () => {
 // SPLASH → LOGIN
 // ════════════════════════════════════════════════════
 function goToLogin() {
+  // Apply theme color IMMEDIATELY when button is pressed
+  const isDark = document.body.classList.contains('dark');
+  applyThemeColor(isDark);
+
   const s = document.getElementById('splash-screen');
   s.style.transition = 'opacity 0.3s ease';
   s.style.opacity = '0';
@@ -861,7 +862,6 @@ function goToLogin() {
         return;
       }
     }
-    applyThemeColor(document.body.classList.contains('dark'));
     renderLoginScreen();
     showScreen('login');
   }, 300);
